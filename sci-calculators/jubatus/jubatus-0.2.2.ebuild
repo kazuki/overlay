@@ -7,7 +7,7 @@ inherit waf-utils
 
 DESCRIPTION="Distributed Online Machine Learning Framework"
 HOMEPAGE="http://jubat.us/"
-SRC_URI="https://github.com/jubatus/jubatus/tarball/jubatus-${PV}"
+SRC_URI="https://github.com/jubatus/jubatus/tarball/jubatus-${PV} -> ${P}.tar.gz"
 LICENSE="GPL-2"
 
 SLOT="0"
@@ -23,8 +23,7 @@ DEPEND="dev-cpp/pficommon[mprpc]
 RDEPEND="${DPEND}"
 
 src_unpack() {
-    ln -s "${A}" "${DISTDIR}/${A}.tar.gz"
-    unpack ${A}.tar.gz
+    unpack ${A}
 
     # Rename github packaged dir name to standard dir name
     mv ${WORKDIR}/jubatus-jubatus-* ${WORKDIR}/${P}
