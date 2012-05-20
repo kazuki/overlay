@@ -3,7 +3,7 @@
 
 EAPI="3"
 
-inherit git
+inherit git-2 eutils
 
 EGIT_REPO_URI="git://github.com/collie/accord.git"
 
@@ -12,6 +12,13 @@ KEYWORDS="~amd64"
 IUSE=""
 RDEPEND="sys-cluster/corosync"
 DEPEND="${RDEPENT}"
+
+src_unpack() {
+    git-2_src_unpack
+
+    cd "${S}"
+    epatch "${FILESDIR}/coroutine-longjmp.patch"
+}
 
 src_install() {
     cd "${S}"
