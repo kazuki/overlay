@@ -17,7 +17,7 @@ IUSE="zookeeper +re2 mecab ux"
 DEPEND="=dev-cpp/pficommon-9999[mprpc]
         =dev-cpp/jubatus-mpio-${PV}
         =dev-cpp/jubatus-msgpack-rpc-${PV}
-        dev-cpp/glog
+        >=dev-cpp/glog-0.3.2
         zookeeper? ( >=sys-cluster/apache-zookeeper-3.4.0 )
         re2? ( dev-libs/re2 )
         mecab? ( >=app-text/mecab-0.99 )
