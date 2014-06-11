@@ -1,8 +1,8 @@
 diff --git a/CREDITS b/CREDITS
-index e371c55..6b5b3e6 100644
+index c322dcf..e8fcd54 100644
 --- a/CREDITS
 +++ b/CREDITS
-@@ -1186,6 +1186,13 @@ S: R. Tocantins, 89 - Cristo Rei
+@@ -1193,6 +1193,13 @@ S: R. Tocantins, 89 - Cristo Rei
  S: 80050-430 - Curitiba - Paraná
  S: Brazil
  
@@ -17,10 +17,10 @@ index e371c55..6b5b3e6 100644
  E: galak@kernel.crashing.org
  D: Embedded PowerPC 6xx/7xx/74xx/82xx/83xx/85xx support
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 900d98e..75a4451 100644
+index 6c484ac..f10e1ca 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -576,6 +576,14 @@ F:	drivers/crypto/geode*
+@@ -583,6 +583,14 @@ F:	drivers/crypto/geode*
  F:	drivers/video/geode/
  F:	arch/x86/include/asm/geode.h
  
@@ -36,12 +36,12 @@ index 900d98e..75a4451 100644
  M:	Joerg Roedel <joro@8bytes.org>
  L:	iommu@lists.linux-foundation.org
 diff --git a/drivers/Kconfig b/drivers/Kconfig
-index b3138fb..73b7bad 100644
+index 0a0a90f..3da799d 100644
 --- a/drivers/Kconfig
 +++ b/drivers/Kconfig
-@@ -170,4 +170,6 @@ source "drivers/phy/Kconfig"
+@@ -174,4 +174,6 @@ source "drivers/powercap/Kconfig"
  
- source "drivers/powercap/Kconfig"
+ source "drivers/mcb/Kconfig"
  
 +source "drivers/gpu/hsa/Kconfig"
 +
@@ -55,12 +55,12 @@ index d8a22c2..1e511d37 100644
  obj-$(CONFIG_TEGRA_HOST1X)	+= host1x/
 +obj-$(CONFIG_HSA)	+= hsa/
 diff --git a/drivers/gpu/drm/radeon/Makefile b/drivers/gpu/drm/radeon/Makefile
-index 306364a..708a5b0 100644
+index 0943353..8fcec5d 100644
 --- a/drivers/gpu/drm/radeon/Makefile
 +++ b/drivers/gpu/drm/radeon/Makefile
-@@ -99,6 +99,8 @@ radeon-y += \
- 	uvd_v3_1.o \
- 	uvd_v4_2.o
+@@ -105,6 +105,8 @@ radeon-y += \
+ 	vce_v1_0.o \
+ 	vce_v2_0.o \
  
 +radeon-y += radeon_kfd.o
 +
@@ -68,18 +68,18 @@ index 306364a..708a5b0 100644
  radeon-$(CONFIG_VGA_SWITCHEROO) += radeon_atpx_handler.o
  radeon-$(CONFIG_ACPI) += radeon_acpi.o
 diff --git a/drivers/gpu/drm/radeon/cik.c b/drivers/gpu/drm/radeon/cik.c
-index bbb1784..2921a74 100644
+index d2fd989..e8a970a 100644
 --- a/drivers/gpu/drm/radeon/cik.c
 +++ b/drivers/gpu/drm/radeon/cik.c
-@@ -75,6 +75,7 @@ extern void si_init_uvd_internal_cg(struct radeon_device *rdev);
- extern int cik_sdma_resume(struct radeon_device *rdev);
+@@ -84,6 +84,7 @@ extern int cik_sdma_resume(struct radeon_device *rdev);
  extern void cik_sdma_enable(struct radeon_device *rdev, bool enable);
  extern void cik_sdma_fini(struct radeon_device *rdev);
+ extern void vce_v2_0_enable_mgcg(struct radeon_device *rdev, bool enable);
 +extern void radeon_kfd_interrupt(struct radeon_device *rdev, const void *ih_ring_entry);
  static void cik_rlc_stop(struct radeon_device *rdev);
  static void cik_pcie_gen3_enable(struct radeon_device *rdev);
  static void cik_program_aspm(struct radeon_device *rdev);
-@@ -84,6 +85,8 @@ static void cik_fini_pg(struct radeon_device *rdev);
+@@ -93,6 +94,8 @@ static void cik_fini_pg(struct radeon_device *rdev);
  static void cik_fini_cg(struct radeon_device *rdev);
  static void cik_enable_gui_idle_interrupt(struct radeon_device *rdev,
  					  bool enable);
@@ -88,7 +88,7 @@ index bbb1784..2921a74 100644
  
  /* get temperature in millidegrees */
  int ci_get_temp(struct radeon_device *rdev)
-@@ -1472,6 +1475,8 @@ static const u32 hawaii_mgcg_cgcg_init[] =
+@@ -1518,6 +1521,8 @@ static const u32 godavari_golden_registers[] =
  
  static void cik_init_golden_registers(struct radeon_device *rdev)
  {
@@ -97,7 +97,7 @@ index bbb1784..2921a74 100644
  	switch (rdev->family) {
  	case CHIP_BONAIRE:
  		radeon_program_register_sequence(rdev,
-@@ -1532,6 +1537,7 @@ static void cik_init_golden_registers(struct radeon_device *rdev)
+@@ -1592,6 +1597,7 @@ static void cik_init_golden_registers(struct radeon_device *rdev)
  	default:
  		break;
  	}
@@ -105,7 +105,7 @@ index bbb1784..2921a74 100644
  }
  
  /**
-@@ -3095,6 +3101,7 @@ static void cik_setup_rb(struct radeon_device *rdev,
+@@ -3193,6 +3199,7 @@ static void cik_setup_rb(struct radeon_device *rdev,
  	u32 disabled_rbs = 0;
  	u32 enabled_rbs = 0;
  
@@ -113,7 +113,7 @@ index bbb1784..2921a74 100644
  	for (i = 0; i < se_num; i++) {
  		for (j = 0; j < sh_per_se; j++) {
  			cik_select_se_sh(rdev, i, j);
-@@ -3106,6 +3113,7 @@ static void cik_setup_rb(struct radeon_device *rdev,
+@@ -3204,6 +3211,7 @@ static void cik_setup_rb(struct radeon_device *rdev,
  		}
  	}
  	cik_select_se_sh(rdev, 0xffffffff, 0xffffffff);
@@ -121,7 +121,7 @@ index bbb1784..2921a74 100644
  
  	mask = 1;
  	for (i = 0; i < max_rb_num_per_se * se_num; i++) {
-@@ -3116,6 +3124,7 @@ static void cik_setup_rb(struct radeon_device *rdev,
+@@ -3214,6 +3222,7 @@ static void cik_setup_rb(struct radeon_device *rdev,
  
  	rdev->config.cik.backend_enable_mask = enabled_rbs;
  
@@ -129,7 +129,7 @@ index bbb1784..2921a74 100644
  	for (i = 0; i < se_num; i++) {
  		cik_select_se_sh(rdev, i, 0xffffffff);
  		data = 0;
-@@ -3143,6 +3152,7 @@ static void cik_setup_rb(struct radeon_device *rdev,
+@@ -3241,6 +3250,7 @@ static void cik_setup_rb(struct radeon_device *rdev,
  		WREG32(PA_SC_RASTER_CONFIG, data);
  	}
  	cik_select_se_sh(rdev, 0xffffffff, 0xffffffff);
@@ -137,7 +137,7 @@ index bbb1784..2921a74 100644
  }
  
  /**
-@@ -3350,6 +3360,12 @@ static void cik_gpu_init(struct radeon_device *rdev)
+@@ -3449,6 +3459,12 @@ static void cik_gpu_init(struct radeon_device *rdev)
  	/* set HW defaults for 3D engine */
  	WREG32(CP_MEQ_THRESHOLDS, MEQ1_START(0x30) | MEQ2_START(0x60));
  
@@ -150,7 +150,7 @@ index bbb1784..2921a74 100644
  	WREG32(SX_DEBUG_1, 0x20);
  
  	WREG32(TA_CNTL_AUX, 0x00010000);
-@@ -3405,6 +3421,7 @@ static void cik_gpu_init(struct radeon_device *rdev)
+@@ -3504,6 +3520,7 @@ static void cik_gpu_init(struct radeon_device *rdev)
  
  	WREG32(PA_CL_ENHANCE, CLIP_VTX_REORDER_ENA | NUM_CLIP_SEQ(3));
  	WREG32(PA_SC_ENHANCE, ENABLE_PA_SC_OUT_OF_ORDER);
@@ -158,7 +158,7 @@ index bbb1784..2921a74 100644
  
  	udelay(50);
  }
-@@ -4254,12 +4271,11 @@ static int cik_mec_init(struct radeon_device *rdev)
+@@ -4352,12 +4369,11 @@ static int cik_mec_init(struct radeon_device *rdev)
  	/*
  	 * KV:    2 MEC, 4 Pipes/MEC, 8 Queues/Pipe - 64 Queues total
  	 * CI/KB: 1 MEC, 4 Pipes/MEC, 8 Queues/Pipe - 32 Queues total
@@ -175,7 +175,7 @@ index bbb1784..2921a74 100644
  	rdev->mec.num_queue = rdev->mec.num_mec * rdev->mec.num_pipe * 8;
  
  	if (rdev->mec.hpd_eop_obj == NULL) {
-@@ -4401,28 +4417,24 @@ static int cik_cp_compute_resume(struct radeon_device *rdev)
+@@ -4499,28 +4515,24 @@ static int cik_cp_compute_resume(struct radeon_device *rdev)
  
  	/* init the pipes */
  	mutex_lock(&rdev->srbm_mutex);
@@ -217,7 +217,7 @@ index bbb1784..2921a74 100644
  	mutex_unlock(&rdev->srbm_mutex);
  
  	/* init the queues.  Just two for now. */
-@@ -5469,8 +5481,13 @@ int cik_ib_parse(struct radeon_device *rdev, struct radeon_ib *ib)
+@@ -5564,8 +5576,13 @@ int cik_ib_parse(struct radeon_device *rdev, struct radeon_ib *ib)
   */
  int cik_vm_init(struct radeon_device *rdev)
  {
@@ -233,7 +233,7 @@ index bbb1784..2921a74 100644
  	/* base offset of vram pages */
  	if (rdev->flags & RADEON_IS_IGP) {
  		u64 tmp = RREG32(MC_VM_FB_OFFSET);
-@@ -5630,6 +5647,7 @@ static void cik_wait_for_rlc_serdes(struct radeon_device *rdev)
+@@ -5725,6 +5742,7 @@ static void cik_wait_for_rlc_serdes(struct radeon_device *rdev)
  	u32 i, j, k;
  	u32 mask;
  
@@ -241,7 +241,7 @@ index bbb1784..2921a74 100644
  	for (i = 0; i < rdev->config.cik.max_shader_engines; i++) {
  		for (j = 0; j < rdev->config.cik.max_sh_per_se; j++) {
  			cik_select_se_sh(rdev, i, j);
-@@ -5641,6 +5659,7 @@ static void cik_wait_for_rlc_serdes(struct radeon_device *rdev)
+@@ -5736,6 +5754,7 @@ static void cik_wait_for_rlc_serdes(struct radeon_device *rdev)
  		}
  	}
  	cik_select_se_sh(rdev, 0xffffffff, 0xffffffff);
@@ -249,7 +249,7 @@ index bbb1784..2921a74 100644
  
  	mask = SE_MASTER_BUSY_MASK | GC_MASTER_BUSY | TC0_MASTER_BUSY | TC1_MASTER_BUSY;
  	for (k = 0; k < rdev->usec_timeout; k++) {
-@@ -5790,10 +5809,12 @@ static int cik_rlc_resume(struct radeon_device *rdev)
+@@ -5888,10 +5907,12 @@ static int cik_rlc_resume(struct radeon_device *rdev)
  	WREG32(RLC_LB_CNTR_INIT, 0);
  	WREG32(RLC_LB_CNTR_MAX, 0x00008000);
  
@@ -262,7 +262,7 @@ index bbb1784..2921a74 100644
  
  	WREG32(RLC_MC_CNTL, 0);
  	WREG32(RLC_UCODE_CNTL, 0);
-@@ -5826,11 +5847,13 @@ static void cik_enable_cgcg(struct radeon_device *rdev, bool enable)
+@@ -5924,11 +5945,13 @@ static void cik_enable_cgcg(struct radeon_device *rdev, bool enable)
  
  		tmp = cik_halt_rlc(rdev);
  
@@ -276,7 +276,7 @@ index bbb1784..2921a74 100644
  
  		cik_update_rlc(rdev, tmp);
  
-@@ -5872,11 +5895,13 @@ static void cik_enable_mgcg(struct radeon_device *rdev, bool enable)
+@@ -5970,11 +5993,13 @@ static void cik_enable_mgcg(struct radeon_device *rdev, bool enable)
  
  		tmp = cik_halt_rlc(rdev);
  
@@ -290,7 +290,7 @@ index bbb1784..2921a74 100644
  
  		cik_update_rlc(rdev, tmp);
  
-@@ -5920,11 +5945,13 @@ static void cik_enable_mgcg(struct radeon_device *rdev, bool enable)
+@@ -6018,11 +6043,13 @@ static void cik_enable_mgcg(struct radeon_device *rdev, bool enable)
  
  		tmp = cik_halt_rlc(rdev);
  
@@ -304,7 +304,7 @@ index bbb1784..2921a74 100644
  
  		cik_update_rlc(rdev, tmp);
  	}
-@@ -6303,10 +6330,12 @@ static u32 cik_get_cu_active_bitmap(struct radeon_device *rdev, u32 se, u32 sh)
+@@ -6405,10 +6432,12 @@ static u32 cik_get_cu_active_bitmap(struct radeon_device *rdev, u32 se, u32 sh)
  	u32 mask = 0, tmp, tmp1;
  	int i;
  
@@ -317,7 +317,7 @@ index bbb1784..2921a74 100644
  
  	tmp &= 0xffff0000;
  
-@@ -6776,8 +6805,7 @@ static int cik_irq_init(struct radeon_device *rdev)
+@@ -6892,8 +6921,7 @@ static int cik_irq_init(struct radeon_device *rdev)
  int cik_irq_set(struct radeon_device *rdev)
  {
  	u32 cp_int_cntl;
@@ -327,7 +327,7 @@ index bbb1784..2921a74 100644
  	u32 crtc1 = 0, crtc2 = 0, crtc3 = 0, crtc4 = 0, crtc5 = 0, crtc6 = 0;
  	u32 hpd1, hpd2, hpd3, hpd4, hpd5, hpd6;
  	u32 grbm_int_cntl = 0;
-@@ -6811,13 +6839,6 @@ int cik_irq_set(struct radeon_device *rdev)
+@@ -6927,13 +6955,6 @@ int cik_irq_set(struct radeon_device *rdev)
  	dma_cntl1 = RREG32(SDMA0_CNTL + SDMA1_REGISTER_OFFSET) & ~TRAP_ENABLE;
  
  	cp_m1p0 = RREG32(CP_ME1_PIPE0_INT_CNTL) & ~TIME_STAMP_INT_ENABLE;
@@ -341,7 +341,7 @@ index bbb1784..2921a74 100644
  
  	if (rdev->flags & RADEON_IS_IGP)
  		thermal_int = RREG32_SMC(CG_THERMAL_INT_CTRL) &
-@@ -6839,33 +6860,6 @@ int cik_irq_set(struct radeon_device *rdev)
+@@ -6955,33 +6976,6 @@ int cik_irq_set(struct radeon_device *rdev)
  			case 0:
  				cp_m1p0 |= TIME_STAMP_INT_ENABLE;
  				break;
@@ -375,7 +375,7 @@ index bbb1784..2921a74 100644
  			default:
  				DRM_DEBUG("si_irq_set: sw int cp1 invalid pipe %d\n", ring->pipe);
  				break;
-@@ -6882,33 +6876,6 @@ int cik_irq_set(struct radeon_device *rdev)
+@@ -6998,33 +6992,6 @@ int cik_irq_set(struct radeon_device *rdev)
  			case 0:
  				cp_m1p0 |= TIME_STAMP_INT_ENABLE;
  				break;
@@ -409,7 +409,7 @@ index bbb1784..2921a74 100644
  			default:
  				DRM_DEBUG("si_irq_set: sw int cp2 invalid pipe %d\n", ring->pipe);
  				break;
-@@ -6997,13 +6964,6 @@ int cik_irq_set(struct radeon_device *rdev)
+@@ -7113,13 +7080,6 @@ int cik_irq_set(struct radeon_device *rdev)
  	WREG32(SDMA0_CNTL + SDMA1_REGISTER_OFFSET, dma_cntl1);
  
  	WREG32(CP_ME1_PIPE0_INT_CNTL, cp_m1p0);
@@ -423,7 +423,7 @@ index bbb1784..2921a74 100644
  
  	WREG32(GRBM_INT_CNTL, grbm_int_cntl);
  
-@@ -7265,6 +7225,9 @@ restart_ih:
+@@ -7435,6 +7395,9 @@ restart_ih:
  	while (rptr != wptr) {
  		/* wptr/rptr are in bytes! */
  		ring_index = rptr / 4;
@@ -433,7 +433,7 @@ index bbb1784..2921a74 100644
  		src_id =  le32_to_cpu(rdev->ih.ring[ring_index]) & 0xff;
  		src_data = le32_to_cpu(rdev->ih.ring[ring_index + 1]) & 0xfffffff;
  		ring_id = le32_to_cpu(rdev->ih.ring[ring_index + 2]) & 0xff;
-@@ -7883,6 +7846,10 @@ static int cik_startup(struct radeon_device *rdev)
+@@ -8109,6 +8072,10 @@ static int cik_startup(struct radeon_device *rdev)
  	if (r)
  		return r;
  
@@ -444,7 +444,7 @@ index bbb1784..2921a74 100644
  	return 0;
  }
  
-@@ -7931,6 +7898,7 @@ int cik_resume(struct radeon_device *rdev)
+@@ -8157,6 +8124,7 @@ int cik_resume(struct radeon_device *rdev)
   */
  int cik_suspend(struct radeon_device *rdev)
  {
@@ -453,10 +453,10 @@ index bbb1784..2921a74 100644
  	dce6_audio_fini(rdev);
  	radeon_vm_manager_fini(rdev);
 diff --git a/drivers/gpu/drm/radeon/radeon.h b/drivers/gpu/drm/radeon/radeon.h
-index e887d02..0150b97 100644
+index 8149e7c..0f4b900 100644
 --- a/drivers/gpu/drm/radeon/radeon.h
 +++ b/drivers/gpu/drm/radeon/radeon.h
-@@ -674,6 +674,10 @@ struct radeon_doorbell {
+@@ -671,6 +671,10 @@ struct radeon_doorbell {
  
  int radeon_doorbell_get(struct radeon_device *rdev, u32 *page);
  void radeon_doorbell_free(struct radeon_device *rdev, u32 doorbell);
@@ -467,7 +467,7 @@ index e887d02..0150b97 100644
  
  /*
   * IRQS.
-@@ -2234,12 +2238,17 @@ struct radeon_device {
+@@ -2320,12 +2324,17 @@ struct radeon_device {
  	struct radeon_atcs		atcs;
  	/* srbm instance registers */
  	struct mutex			srbm_mutex;
@@ -484,12 +484,12 @@ index e887d02..0150b97 100644
 +	struct kfd_dev		*kfd;
  };
  
- int radeon_device_init(struct radeon_device *rdev,
+ bool radeon_is_px(struct drm_device *dev);
 diff --git a/drivers/gpu/drm/radeon/radeon_device.c b/drivers/gpu/drm/radeon/radeon_device.c
-index 044bc98..8282e06 100644
+index 2cd144c..9c2ee49 100644
 --- a/drivers/gpu/drm/radeon/radeon_device.c
 +++ b/drivers/gpu/drm/radeon/radeon_device.c
-@@ -324,6 +324,37 @@ void radeon_doorbell_free(struct radeon_device *rdev, u32 doorbell)
+@@ -328,6 +328,37 @@ void radeon_doorbell_free(struct radeon_device *rdev, u32 doorbell)
  		__clear_bit(doorbell, rdev->doorbell.used);
  }
  
@@ -527,7 +527,7 @@ index 044bc98..8282e06 100644
  /*
   * radeon_wb_*()
   * Writeback is the the method by which the the GPU updates special pages
-@@ -1185,6 +1216,7 @@ int radeon_device_init(struct radeon_device *rdev,
+@@ -1189,6 +1220,7 @@ int radeon_device_init(struct radeon_device *rdev,
  	mutex_init(&rdev->pm.mutex);
  	mutex_init(&rdev->gpu_clock_mutex);
  	mutex_init(&rdev->srbm_mutex);
@@ -536,11 +536,11 @@ index 044bc98..8282e06 100644
  	init_rwsem(&rdev->exclusive_lock);
  	init_waitqueue_head(&rdev->irq.vblank_queue);
 diff --git a/drivers/gpu/drm/radeon/radeon_drv.c b/drivers/gpu/drm/radeon/radeon_drv.c
-index f633c27..da78b03 100644
+index c00a2f5..821aba1 100644
 --- a/drivers/gpu/drm/radeon/radeon_drv.c
 +++ b/drivers/gpu/drm/radeon/radeon_drv.c
-@@ -149,6 +149,9 @@ static inline void radeon_unregister_atpx_handler(void) {}
- static inline bool radeon_is_px(void) { return false; }
+@@ -150,6 +150,9 @@ static inline void radeon_register_atpx_handler(void) {}
+ static inline void radeon_unregister_atpx_handler(void) {}
  #endif
  
 +extern bool radeon_kfd_init(void);
@@ -549,7 +549,7 @@ index f633c27..da78b03 100644
  int radeon_no_wb;
  int radeon_modeset = -1;
  int radeon_dynclks = -1;
-@@ -632,12 +635,15 @@ static int __init radeon_init(void)
+@@ -618,12 +621,15 @@ static int __init radeon_init(void)
  #endif
  	}
  
@@ -567,10 +567,10 @@ index f633c27..da78b03 100644
  }
 diff --git a/drivers/gpu/drm/radeon/radeon_kfd.c b/drivers/gpu/drm/radeon/radeon_kfd.c
 new file mode 100644
-index 0000000..d41bb1d
+index 0000000..074d74b
 --- /dev/null
 +++ b/drivers/gpu/drm/radeon/radeon_kfd.c
-@@ -0,0 +1,277 @@
+@@ -0,0 +1,286 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -591,8 +591,6 @@ index 0000000..d41bb1d
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Author: Andrew Lewycky
 + */
 +
 +#include <linux/module.h>
@@ -623,6 +621,8 @@ index 0000000..d41bb1d
 +static void lock_grbm_gfx_idx(struct kgd_dev *kgd);
 +static void unlock_grbm_gfx_idx(struct kgd_dev *kgd);
 +
++static uint32_t get_max_engine_clock_in_mhz(struct kgd_dev *kgd);
++
 +
 +static const struct kfd2kgd_calls kfd2kgd = {
 +	.allocate_mem = allocate_mem,
@@ -637,6 +637,7 @@ index 0000000..d41bb1d
 +	.unlock_srbm_gfx_cntl = unlock_srbm_gfx_cntl,
 +	.lock_grbm_gfx_idx = lock_grbm_gfx_idx,
 +	.unlock_grbm_gfx_idx = unlock_grbm_gfx_idx,
++	.get_max_engine_clock_in_mhz = get_max_engine_clock_in_mhz,
 +};
 +
 +static const struct kgd2kfd_calls *kgd2kfd;
@@ -848,21 +849,29 @@ index 0000000..d41bb1d
 +
 +	return rdev->asic->get_gpu_clock_counter(rdev);
 +}
++
++static uint32_t get_max_engine_clock_in_mhz(struct kgd_dev *kgd)
++{
++	struct radeon_device *rdev = (struct radeon_device *)kgd;
++
++	/* The sclk is in quantas of 10kHz */
++	return rdev->pm.dpm.dyn_state.max_clock_voltage_on_ac.sclk / 100;
++}
 diff --git a/drivers/gpu/drm/radeon/radeon_kms.c b/drivers/gpu/drm/radeon/radeon_kms.c
-index 66ed3ea..1092c2a 100644
+index eaaedba..661a3d0 100644
 --- a/drivers/gpu/drm/radeon/radeon_kms.c
 +++ b/drivers/gpu/drm/radeon/radeon_kms.c
-@@ -40,6 +40,10 @@ bool radeon_is_px(void);
- static inline bool radeon_is_px(void) { return false; }
- #endif
+@@ -34,6 +34,10 @@
+ #include <linux/slab.h>
+ #include <linux/pm_runtime.h>
  
 +extern void radeon_kfd_device_probe(struct radeon_device *rdev);
 +extern void radeon_kfd_device_init(struct radeon_device *rdev);
 +extern void radeon_kfd_device_fini(struct radeon_device *rdev);
 +
- /**
-  * radeon_driver_unload_kms - Main unload function for KMS.
-  *
+ #if defined(CONFIG_VGA_SWITCHEROO)
+ bool radeon_has_atpx(void);
+ #else
 @@ -63,6 +67,8 @@ int radeon_driver_unload_kms(struct drm_device *dev)
  
  	pm_runtime_get_sync(dev->dev);
@@ -872,16 +881,16 @@ index 66ed3ea..1092c2a 100644
  	radeon_acpi_fini(rdev);
  	
  	radeon_modeset_fini(rdev);
-@@ -137,6 +143,9 @@ int radeon_driver_load_kms(struct drm_device *dev, unsigned long flags)
+@@ -142,6 +148,9 @@ int radeon_driver_load_kms(struct drm_device *dev, unsigned long flags)
  				"Error during ACPI methods call\n");
  	}
  
 +	radeon_kfd_device_probe(rdev);
 +	radeon_kfd_device_init(rdev);
 +
- 	if ((radeon_runtime_pm == 1) ||
- 	    ((radeon_runtime_pm == -1) && radeon_is_px())) {
+ 	if (radeon_is_px(dev)) {
  		pm_runtime_use_autosuspend(dev->dev);
+ 		pm_runtime_set_autosuspend_delay(dev->dev, 5000);
 diff --git a/drivers/gpu/hsa/Kconfig b/drivers/gpu/hsa/Kconfig
 new file mode 100644
 index 0000000..ee7bb28
@@ -917,7 +926,7 @@ index 0000000..0951584
 +obj-$(CONFIG_HSA_RADEON)	+= radeon/
 diff --git a/drivers/gpu/hsa/radeon/Makefile b/drivers/gpu/hsa/radeon/Makefile
 new file mode 100644
-index 0000000..5422e6a
+index 0000000..813b31f
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/Makefile
 @@ -0,0 +1,10 @@
@@ -928,15 +937,15 @@ index 0000000..5422e6a
 +radeon_kfd-y	:= kfd_module.o kfd_device.o kfd_chardev.o \
 +		kfd_pasid.o kfd_topology.o kfd_process.o \
 +		kfd_doorbell.o kfd_sched_cik_static.o kfd_registers.o \
-+		kfd_vidmem.o kfd_interrupt.o
++		kfd_vidmem.o kfd_interrupt.o kfd_aperture.o
 +
 +obj-$(CONFIG_HSA_RADEON)	+= radeon_kfd.o
 diff --git a/drivers/gpu/hsa/radeon/cik_int.h b/drivers/gpu/hsa/radeon/cik_int.h
 new file mode 100644
-index 0000000..9c21d82
+index 0000000..350f0c2
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/cik_int.h
-@@ -0,0 +1,52 @@
+@@ -0,0 +1,50 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -957,8 +966,6 @@ index 0000000..9c21d82
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Author: Andrew Lewycky
 + */
 +
 +#ifndef HSA_RADEON_CIK_INT_H_INCLUDED
@@ -991,10 +998,10 @@ index 0000000..9c21d82
 +
 diff --git a/drivers/gpu/hsa/radeon/cik_regs.h b/drivers/gpu/hsa/radeon/cik_regs.h
 new file mode 100644
-index 0000000..a8dc865
+index 0000000..93f7b34
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/cik_regs.h
-@@ -0,0 +1,220 @@
+@@ -0,0 +1,218 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -1015,8 +1022,6 @@ index 0000000..a8dc865
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Author: Andrew Lewycky
 + */
 +
 +#ifndef CIK_REGS_H
@@ -1215,12 +1220,12 @@ index 0000000..a8dc865
 +#define ATC_VM_APERTURE1_LOW_ADDR			0x3304u
 +
 +#endif
-diff --git a/drivers/gpu/hsa/radeon/kfd_chardev.c b/drivers/gpu/hsa/radeon/kfd_chardev.c
+diff --git a/drivers/gpu/hsa/radeon/kfd_aperture.c b/drivers/gpu/hsa/radeon/kfd_aperture.c
 new file mode 100644
-index 0000000..6e52993
+index 0000000..ef6de27
 --- /dev/null
-+++ b/drivers/gpu/hsa/radeon/kfd_chardev.c
-@@ -0,0 +1,382 @@
++++ b/drivers/gpu/hsa/radeon/kfd_aperture.c
+@@ -0,0 +1,118 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -1242,8 +1247,6 @@ index 0000000..6e52993
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
 + *
-+ * Authors: Andrew Lewycky
-+ *          Oded Gabbay
 + */
 +
 +#include <linux/device.h>
@@ -1253,10 +1256,137 @@ index 0000000..6e52993
 +#include <linux/sched.h>
 +#include <linux/slab.h>
 +#include <linux/uaccess.h>
++#include <linux/compat.h>
 +#include <uapi/linux/kfd_ioctl.h>
 +#include <linux/time.h>
 +#include "kfd_priv.h"
 +#include "kfd_scheduler.h"
++#include <linux/mm.h>
++#include <uapi/asm-generic/mman-common.h>
++#include <asm/processor.h>
++
++
++#define MAKE_GPUVM_APP_BASE(gpu_num) (((uint64_t)(gpu_num) << 61) + 0x1000000000000)
++#define MAKE_GPUVM_APP_LIMIT(base) (((uint64_t)(base) & 0xFFFFFF0000000000) | 0xFFFFFFFFFF)
++#define MAKE_SCRATCH_APP_BASE(gpu_num) (((uint64_t)(gpu_num) << 61) + 0x100000000)
++#define MAKE_SCRATCH_APP_LIMIT(base) (((uint64_t)base & 0xFFFFFFFF00000000) | 0xFFFFFFFF)
++#define MAKE_LDS_APP_BASE(gpu_num) (((uint64_t)(gpu_num) << 61) + 0x0)
++#define MAKE_LDS_APP_LIMIT(base) (((uint64_t)(base) & 0xFFFFFFFF00000000) | 0xFFFFFFFF)
++
++#define HSA_32BIT_LDS_APP_SIZE 0x10000
++#define HSA_32BIT_LDS_APP_ALIGNMENT 0x10000
++
++static unsigned long kfd_reserve_aperture(struct kfd_process *process, unsigned long len, unsigned long alignment)
++{
++
++	unsigned long addr = 0;
++	unsigned long start_address;
++
++	/*Go bottom up and find the first available aligned address. We may narrow space to scan by getting mmap range limits */
++	for (start_address =  alignment; start_address < (TASK_SIZE - alignment); start_address += alignment) {
++		addr = vm_mmap(NULL, start_address, len, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, 0);
++		if (!IS_ERR_VALUE(addr)) {
++			if (addr == start_address)
++				return addr;
++			else
++				vm_munmap(addr, len);
++		}
++	}
++	return 0;
++
++}
++
++int kfd_init_apertures(struct kfd_process *process)
++{
++	uint8_t id  = 0;
++	struct kfd_dev *dev;
++	struct kfd_process_device *pdd;
++
++	mutex_lock(&process->mutex);
++
++	/*Iterating over all devices*/
++	while ((dev = kfd_topology_enum_kfd_devices(id)) != NULL && id < NUM_OF_SUPPORTED_GPUS) {
++
++		pdd = radeon_kfd_get_process_device_data(dev, process);
++
++		/*for 64 bit process aperture will be statically reserved in the non canonical process address space
++		 *for 32 bit process the aperture will be reserved in the process address space
++		 */
++		if (process->is_32bit_user_mode) {
++			/*try to reserve aperture. continue on failure, just put the aperture size to be 0*/
++			pdd->lds_base = kfd_reserve_aperture(process, HSA_32BIT_LDS_APP_SIZE, HSA_32BIT_LDS_APP_ALIGNMENT);
++			if (pdd->lds_base)
++				pdd->lds_limit = pdd->lds_base + HSA_32BIT_LDS_APP_SIZE - 1;
++			else
++				pdd->lds_limit = 0;
++
++			/*GPUVM and Scratch apertures are not supported*/
++			pdd->gpuvm_base = pdd->gpuvm_limit = pdd->scratch_base = pdd->scratch_limit = 0;
++		} else {
++			/*node id couldn't be 0 - the three MSB bits of aperture shoudn't be 0*/
++			pdd->lds_base = MAKE_LDS_APP_BASE(id + 1);
++			pdd->lds_limit = MAKE_LDS_APP_LIMIT(pdd->lds_base);
++			pdd->gpuvm_base = MAKE_GPUVM_APP_BASE(id + 1);
++			pdd->gpuvm_limit = MAKE_GPUVM_APP_LIMIT(pdd->gpuvm_base);
++			pdd->scratch_base = MAKE_SCRATCH_APP_BASE(id + 1);
++			pdd->scratch_limit = MAKE_SCRATCH_APP_LIMIT(pdd->scratch_base);
++		}
++
++		dev_dbg(kfd_device, "node id %u, gpu id %u, lds_base %llX lds_limit %llX gpuvm_base %llX gpuvm_limit %llX scratch_base %llX scratch_limit %llX",
++				id, pdd->dev->id, pdd->lds_base, pdd->lds_limit, pdd->gpuvm_base, pdd->gpuvm_limit, pdd->scratch_base, pdd->scratch_limit);
++
++		id++;
++	}
++
++	mutex_unlock(&process->mutex);
++
++	return 0;
++}
++
++
+diff --git a/drivers/gpu/hsa/radeon/kfd_chardev.c b/drivers/gpu/hsa/radeon/kfd_chardev.c
+new file mode 100644
+index 0000000..0703d3d
+--- /dev/null
++++ b/drivers/gpu/hsa/radeon/kfd_chardev.c
+@@ -0,0 +1,497 @@
++/*
++ * Copyright 2014 Advanced Micro Devices, Inc.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE COPYRIGHT HOLDER(S) OR AUTHOR(S) BE LIABLE FOR ANY CLAIM, DAMAGES OR
++ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++ * OTHER DEALINGS IN THE SOFTWARE.
++ */
++
++#include <linux/device.h>
++#include <linux/export.h>
++#include <linux/err.h>
++#include <linux/fs.h>
++#include <linux/sched.h>
++#include <linux/slab.h>
++#include <linux/uaccess.h>
++#include <linux/compat.h>
++#include <uapi/linux/kfd_ioctl.h>
++#include <linux/time.h>
++#include "kfd_priv.h"
++#include "kfd_scheduler.h"
++#include <linux/mm.h>
++#include <uapi/asm-generic/mman-common.h>
++#include <asm/processor.h>
 +
 +static long kfd_ioctl(struct file *, unsigned int, unsigned long);
 +static int kfd_open(struct inode *, struct file *);
@@ -1267,6 +1397,7 @@ index 0000000..6e52993
 +static const struct file_operations kfd_fops = {
 +	.owner = THIS_MODULE,
 +	.unlocked_ioctl = kfd_ioctl,
++	.compat_ioctl = kfd_ioctl,
 +	.open = kfd_open,
 +	.mmap = kfd_mmap,
 +};
@@ -1332,7 +1463,11 @@ index 0000000..6e52993
 +	if (IS_ERR(process))
 +		return PTR_ERR(process);
 +
-+	pr_debug("\nkfd: process %d opened dev/kfd", process->pasid);
++	process->is_32bit_user_mode = is_compat_task();
++
++	dev_dbg(kfd_device, "process %d opened, compat mode (32 bit) - %d\n", process->pasid, process->is_32bit_user_mode);
++
++	kfd_init_apertures(process);
 +
 +	return 0;
 +}
@@ -1541,6 +1676,103 @@ index 0000000..6e52993
 +	return 0;
 +}
 +
++
++static int kfd_ioctl_get_process_apertures(struct file *filp, struct kfd_process *p, void __user *arg)
++{
++	struct kfd_ioctl_get_process_apertures_args args;
++	struct kfd_process_device *pdd;
++
++	dev_dbg(kfd_device, "get apertures for PASID %d", p->pasid);
++
++	if (copy_from_user(&args, arg, sizeof(args)))
++		return -EFAULT;
++
++	args.num_of_nodes = 0;
++
++	mutex_lock(&p->mutex);
++
++	/*if the process-device list isn't empty*/
++	if (kfd_has_process_device_data(p)) {
++		/* Run over all pdd of the process */
++		pdd = kfd_get_first_process_device_data(p);
++		do {
++
++			args.process_apertures[args.num_of_nodes].gpu_id = pdd->dev->id;
++			args.process_apertures[args.num_of_nodes].lds_base = pdd->lds_base;
++			args.process_apertures[args.num_of_nodes].lds_limit = pdd->lds_limit;
++			args.process_apertures[args.num_of_nodes].gpuvm_base = pdd->gpuvm_base;
++			args.process_apertures[args.num_of_nodes].gpuvm_limit = pdd->gpuvm_limit;
++			args.process_apertures[args.num_of_nodes].scratch_base = pdd->scratch_base;
++			args.process_apertures[args.num_of_nodes].scratch_limit = pdd->scratch_limit;
++
++			dev_dbg(kfd_device, "node id %u, gpu id %u, lds_base %llX lds_limit %llX gpuvm_base %llX gpuvm_limit %llX scratch_base %llX scratch_limit %llX",
++					args.num_of_nodes, pdd->dev->id, pdd->lds_base, pdd->lds_limit, pdd->gpuvm_base, pdd->gpuvm_limit, pdd->scratch_base, pdd->scratch_limit);
++			args.num_of_nodes++;
++		} while ((pdd = kfd_get_next_process_device_data(p, pdd)) != NULL && (args.num_of_nodes < NUM_OF_SUPPORTED_GPUS));
++	}
++
++	mutex_unlock(&p->mutex);
++
++	if (copy_to_user(arg, &args, sizeof(args)))
++		return -EFAULT;
++
++	return 0;
++}
++
++static long
++kfd_ioctl_pmc_acquire_access(struct file *filp, struct kfd_process *p, void __user *arg)
++{
++	struct kfd_ioctl_pmc_acquire_access_args args;
++	struct kfd_dev *dev;
++	int err = -EBUSY;
++
++	if (copy_from_user(&args, arg, sizeof(args)))
++		return -EFAULT;
++
++	dev = radeon_kfd_device_by_id(args.gpu_id);
++	if (dev == NULL)
++		return -EINVAL;
++
++	spin_lock(&dev->pmc_access_lock);
++	if (dev->pmc_locking_process == NULL) {
++		dev->pmc_locking_process = p;
++		dev->pmc_locking_trace = args.trace_id;
++		err = 0;
++	} else if (dev->pmc_locking_process == p && dev->pmc_locking_trace == args.trace_id) {
++		/* Same trace already has an access. Returning success */
++		err = 0;
++	}
++
++	spin_unlock(&dev->pmc_access_lock);
++
++	return err;
++}
++
++static long
++kfd_ioctl_pmc_release_access(struct file *filp, struct kfd_process *p, void __user *arg)
++{
++	struct kfd_ioctl_pmc_release_access_args args;
++	struct kfd_dev *dev;
++	int err = -EINVAL;
++
++	if (copy_from_user(&args, arg, sizeof(args)))
++		return -EFAULT;
++
++	dev = radeon_kfd_device_by_id(args.gpu_id);
++	if (dev == NULL)
++		return -EINVAL;
++
++	spin_lock(&dev->pmc_access_lock);
++	if (dev->pmc_locking_process == p && dev->pmc_locking_trace == args.trace_id) {
++		dev->pmc_locking_process = NULL;
++		dev->pmc_locking_trace = 0;
++		err = 0;
++	}
++	spin_unlock(&dev->pmc_access_lock);
++
++	return err;
++}
++
 +static long
 +kfd_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
 +{
@@ -1570,6 +1802,18 @@ index 0000000..6e52993
 +
 +	case KFD_IOC_GET_CLOCK_COUNTERS:
 +		err = kfd_ioctl_get_clock_counters(filep, process, (void __user *)arg);
++		break;
++
++	case KFD_IOC_GET_PROCESS_APERTURES:
++		err = kfd_ioctl_get_process_apertures(filep, process, (void __user *)arg);
++		break;
++
++	case KFD_IOC_PMC_ACQUIRE_ACCESS:
++		err = kfd_ioctl_pmc_acquire_access(filep, process, (void __user *) arg);
++		break;
++
++	case KFD_IOC_PMC_RELEASE_ACCESS:
++		err = kfd_ioctl_pmc_release_access(filep, process, (void __user *) arg);
 +		break;
 +
 +	default:
@@ -1605,10 +1849,10 @@ index 0000000..6e52993
 +}
 diff --git a/drivers/gpu/hsa/radeon/kfd_crat.h b/drivers/gpu/hsa/radeon/kfd_crat.h
 new file mode 100644
-index 0000000..87ba58e
+index 0000000..a374fa3
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/kfd_crat.h
-@@ -0,0 +1,296 @@
+@@ -0,0 +1,294 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -1629,8 +1873,6 @@ index 0000000..87ba58e
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Author: Evgeny Pinchuk
 + */
 +
 +#ifndef KFD_CRAT_H_INCLUDED
@@ -1907,10 +2149,10 @@ index 0000000..87ba58e
 +#endif /* KFD_CRAT_H_INCLUDED */
 diff --git a/drivers/gpu/hsa/radeon/kfd_device.c b/drivers/gpu/hsa/radeon/kfd_device.c
 new file mode 100644
-index 0000000..ab56ea7
+index 0000000..1489e79
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/kfd_device.c
-@@ -0,0 +1,219 @@
+@@ -0,0 +1,230 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -1931,9 +2173,6 @@ index 0000000..ab56ea7
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Authors: Andrew Lewycky
-+ *          Oded Gabbay
 + */
 +
 +#include <linux/amd-iommu.h>
@@ -2022,20 +2261,30 @@ index 0000000..ab56ea7
 +	int err;
 +
 +	err = amd_iommu_device_info(kfd->pdev, &iommu_info);
-+	if (err < 0)
++	if (err < 0) {
++		dev_err(kfd_device, "error getting iommu info. is the iommu enabled?\n");
 +		return false;
++	}
 +
-+	if ((iommu_info.flags & required_iommu_flags) != required_iommu_flags)
++	if ((iommu_info.flags & required_iommu_flags) != required_iommu_flags) {
++		dev_err(kfd_device, "error required iommu flags ats(%i), pri(%i), pasid(%i)\n",
++		       (iommu_info.flags & AMD_IOMMU_DEVICE_FLAG_ATS_SUP) != 0,
++		       (iommu_info.flags & AMD_IOMMU_DEVICE_FLAG_PRI_SUP) != 0,
++		       (iommu_info.flags & AMD_IOMMU_DEVICE_FLAG_PASID_SUP) != 0);
 +		return false;
++	}
 +
 +	pasid_limit = min_t(pasid_t, (pasid_t)1 << kfd->device_info->max_pasid_bits, iommu_info.max_pasids);
 +	pasid_limit = min_t(pasid_t, pasid_limit, kfd->doorbell_process_limit);
 +
 +	err = amd_iommu_init_device(kfd->pdev, pasid_limit);
-+	if (err < 0)
++	if (err < 0) {
++		dev_err(kfd_device, "error initializing iommu device\n");
 +		return false;
++	}
 +
 +	if (!radeon_kfd_set_pasid_limit(pasid_limit)) {
++		dev_err(kfd_device, "error setting pasid limit\n");
 +		amd_iommu_free_device(kfd->pdev);
 +		return false;
 +	}
@@ -2079,7 +2328,11 @@ index 0000000..ab56ea7
 +
 +	kfd->device_info->scheduler_class->start(kfd->scheduler);
 +
++	spin_lock_init(&kfd->pmc_access_lock);
++
 +	kfd->init_complete = true;
++	dev_info(kfd_device, "added device (%x:%x)\n", kfd->pdev->vendor,
++		 kfd->pdev->device);
 +
 +	return true;
 +}
@@ -2132,10 +2385,10 @@ index 0000000..ab56ea7
 +}
 diff --git a/drivers/gpu/hsa/radeon/kfd_doorbell.c b/drivers/gpu/hsa/radeon/kfd_doorbell.c
 new file mode 100644
-index 0000000..7e87038
+index 0000000..019a8ca
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/kfd_doorbell.c
-@@ -0,0 +1,161 @@
+@@ -0,0 +1,159 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -2156,8 +2409,6 @@ index 0000000..7e87038
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Author: Andrew Lewycky
 + */
 +
 +#include "kfd_priv.h"
@@ -2299,10 +2550,10 @@ index 0000000..7e87038
 +}
 diff --git a/drivers/gpu/hsa/radeon/kfd_interrupt.c b/drivers/gpu/hsa/radeon/kfd_interrupt.c
 new file mode 100644
-index 0000000..e4bced3
+index 0000000..e8f4097
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/kfd_interrupt.c
-@@ -0,0 +1,180 @@
+@@ -0,0 +1,178 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -2323,8 +2574,6 @@ index 0000000..e4bced3
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Author: Andrew Lewycky
 + */
 +
 +/*
@@ -2485,10 +2734,10 @@ index 0000000..e4bced3
 +}
 diff --git a/drivers/gpu/hsa/radeon/kfd_module.c b/drivers/gpu/hsa/radeon/kfd_module.c
 new file mode 100644
-index 0000000..2e738e1
+index 0000000..5498b05
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/kfd_module.c
-@@ -0,0 +1,107 @@
+@@ -0,0 +1,110 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -2509,19 +2758,19 @@ index 0000000..2e738e1
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Authors: Andrew Lewycky
-+ *          Oded Gabbay
 + */
 +
 +#include <linux/module.h>
++#include <linux/device.h>
 +#include "kfd_priv.h"
 +
-+#define DRIVER_AUTHOR		"Andrew Lewycky, Oded Gabbay, Evgeny Pinchuk, others."
++#define KFD_DRIVER_AUTHOR	"AMD Inc. and others"
 +
-+#define DRIVER_NAME		"kfd"
-+#define DRIVER_DESC		"AMD HSA Kernel Fusion Driver"
-+#define DRIVER_DATE		"20140127"
++#define KFD_DRIVER_DESC		"Standalone HSA driver for AMD's GPUs"
++#define KFD_DRIVER_DATE		"20140609"
++#define KFD_DRIVER_MAJOR	0
++#define KFD_DRIVER_MINOR	5
++#define KFD_DRIVER_PATCHLEVEL	1
 +
 +const struct kfd2kgd_calls *kfd2kgd;
 +static const struct kgd2kfd_calls kgd2kfd = {
@@ -2566,7 +2815,7 @@ index 0000000..2e738e1
 +	if (err < 0)
 +		goto err_ioctl;
 +
-+	pr_info("[hsa] Initialized kfd module");
++	dev_info(kfd_device, "Initialized module\n");
 +
 +	err = kfd_topology_init();
 +	if (err < 0)
@@ -2587,21 +2836,24 @@ index 0000000..2e738e1
 +	kfd_topology_shutdown();
 +	radeon_kfd_chardev_exit();
 +	radeon_kfd_pasid_exit();
-+	pr_info("[hsa] Removed kfd module");
++	dev_info(kfd_device, "Removed module\n");
 +}
 +
 +module_init(kfd_module_init);
 +module_exit(kfd_module_exit);
 +
-+MODULE_AUTHOR(DRIVER_AUTHOR);
-+MODULE_DESCRIPTION(DRIVER_DESC);
-+MODULE_LICENSE("GPL");
++MODULE_AUTHOR(KFD_DRIVER_AUTHOR);
++MODULE_DESCRIPTION(KFD_DRIVER_DESC);
++MODULE_LICENSE("GPL and additional rights");
++MODULE_VERSION(__stringify(KFD_DRIVER_MAJOR) "."
++	       __stringify(KFD_DRIVER_MINOR) "."
++	       __stringify(KFD_DRIVER_PATCHLEVEL));
 diff --git a/drivers/gpu/hsa/radeon/kfd_pasid.c b/drivers/gpu/hsa/radeon/kfd_pasid.c
 new file mode 100644
-index 0000000..5514233
+index 0000000..3768f4a
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/kfd_pasid.c
-@@ -0,0 +1,99 @@
+@@ -0,0 +1,97 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -2622,8 +2874,6 @@ index 0000000..5514233
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Author: Andrew Lewycky
 + */
 +
 +#include <linux/slab.h>
@@ -2703,10 +2953,10 @@ index 0000000..5514233
 +}
 diff --git a/drivers/gpu/hsa/radeon/kfd_priv.h b/drivers/gpu/hsa/radeon/kfd_priv.h
 new file mode 100644
-index 0000000..0075aa1
+index 0000000..09051b0
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/kfd_priv.h
-@@ -0,0 +1,245 @@
+@@ -0,0 +1,270 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -2727,8 +2977,6 @@ index 0000000..0075aa1
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Author: Andrew Lewycky
 + */
 +
 +#ifndef KFD_PRIV_H_INCLUDED
@@ -2802,6 +3050,11 @@ index 0000000..0075aa1
 +	atomic_t interrupt_ring_wptr;
 +	struct work_struct interrupt_work;
 +	spinlock_t interrupt_lock;
++
++	/* Performance counters exclusivity lock */
++	spinlock_t pmc_access_lock;
++	struct kfd_process *pmc_locking_process;
++	uint64_t pmc_locking_trace;
 +};
 +
 +/* KGD2KFD callbacks */
@@ -2869,6 +3122,16 @@ index 0000000..0075aa1
 +
 +	/* Is this process/pasid bound to this device? (amd_iommu_bind_pasid) */
 +	bool bound;
++
++	/*Apertures*/
++	uint64_t lds_base;
++	uint64_t lds_limit;
++	uint64_t gpuvm_base;
++	uint64_t gpuvm_limit;
++	uint64_t scratch_base;
++	uint64_t scratch_limit;
++
++
 +};
 +
 +/* Process data */
@@ -2895,6 +3158,10 @@ index 0000000..0075aa1
 +	size_t queue_array_size;
 +	struct kfd_queue **queues;	/* Size is queue_array_size, up to MAX_PROCESS_QUEUES. */
 +	unsigned long allocated_queue_bitmap[DIV_ROUND_UP(MAX_PROCESS_QUEUES, BITS_PER_LONG)];
++
++	/*Is the user space process 32 bit?*/
++	bool is_32bit_user_mode;
++
 +};
 +
 +struct kfd_process *radeon_kfd_create_process(const struct task_struct *);
@@ -2909,6 +3176,10 @@ index 0000000..0075aa1
 +void radeon_kfd_remove_queue(struct kfd_process *p, unsigned int queue_id);
 +struct kfd_queue *radeon_kfd_get_queue(struct kfd_process *p, unsigned int queue_id);
 +
++/* Process device data iterator */
++struct kfd_process_device *kfd_get_first_process_device_data(struct kfd_process *p);
++struct kfd_process_device *kfd_get_next_process_device_data(struct kfd_process *p, struct kfd_process_device *pdd);
++bool kfd_has_process_device_data(struct kfd_process *p);
 +
 +/* PASIDs */
 +int radeon_kfd_pasid_init(void);
@@ -2935,6 +3206,7 @@ index 0000000..0075aa1
 +int kfd_topology_remove_device(struct kfd_dev *gpu);
 +struct kfd_dev *radeon_kfd_device_by_id(uint32_t gpu_id);
 +struct kfd_dev *radeon_kfd_device_by_pci_dev(const struct pci_dev *pdev);
++struct kfd_dev *kfd_topology_enum_kfd_devices(uint8_t idx);
 +
 +/* MMIO registers */
 +#define WRITE_REG(dev, reg, value) radeon_kfd_write_reg((dev), (reg), (value))
@@ -2951,13 +3223,16 @@ index 0000000..0075aa1
 +void kgd2kfd_suspend(struct kfd_dev *dev);
 +int kgd2kfd_resume(struct kfd_dev *dev);
 +
++/*HSA apertures*/
++int kfd_init_apertures(struct kfd_process *process);
++
 +#endif
 diff --git a/drivers/gpu/hsa/radeon/kfd_process.c b/drivers/gpu/hsa/radeon/kfd_process.c
 new file mode 100644
-index 0000000..5da7e2d
+index 0000000..4d7bc75
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/kfd_process.c
-@@ -0,0 +1,461 @@
+@@ -0,0 +1,483 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -2978,8 +3253,6 @@ index 0000000..5da7e2d
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Author: Andrew Lewycky
 + */
 +
 +#include <linux/log2.h>
@@ -3111,8 +3384,15 @@ index 0000000..5da7e2d
 +
 +	radeon_kfd_pasid_free(p->pasid);
 +
-+	list_for_each_entry_safe(pdd, temp, &p->per_device_data, per_device_list)
++	list_for_each_entry_safe(pdd, temp, &p->per_device_data, per_device_list) {
++		spin_lock(&pdd->dev->pmc_access_lock);
++		if (pdd->dev->pmc_locking_process == p) {
++			pdd->dev->pmc_locking_process = NULL;
++			pdd->dev->pmc_locking_trace = 0;
++		}
++		spin_unlock(&pdd->dev->pmc_access_lock);
 +		kfree(pdd);
++	}
 +
 +	mutex_destroy(&p->mutex);
 +
@@ -3419,12 +3699,29 @@ index 0000000..5da7e2d
 +	 * remove_queue would have to NULL removed queues. */
 +	return (queue_id < p->queue_array_size && test_bit(queue_id, p->allocated_queue_bitmap)) ? p->queues[queue_id] : NULL;
 +}
++
++struct kfd_process_device *kfd_get_first_process_device_data(struct kfd_process *p)
++{
++	return list_first_entry(&p->per_device_data, struct kfd_process_device, per_device_list);
++}
++
++struct kfd_process_device *kfd_get_next_process_device_data(struct kfd_process *p, struct kfd_process_device *pdd)
++{
++	if (list_is_last(&pdd->per_device_list, &p->per_device_data))
++		return NULL;
++	return list_next_entry(pdd, per_device_list);
++}
++
++bool kfd_has_process_device_data(struct kfd_process *p)
++{
++	return !(list_empty(&p->per_device_data));
++}
 diff --git a/drivers/gpu/hsa/radeon/kfd_registers.c b/drivers/gpu/hsa/radeon/kfd_registers.c
 new file mode 100644
-index 0000000..ecbb885
+index 0000000..223debd
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/kfd_registers.c
-@@ -0,0 +1,52 @@
+@@ -0,0 +1,50 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -3445,8 +3742,6 @@ index 0000000..ecbb885
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Author: Andrew Lewycky
 + */
 +
 +#include <linux/io.h>
@@ -3479,10 +3774,10 @@ index 0000000..ecbb885
 +}
 diff --git a/drivers/gpu/hsa/radeon/kfd_sched_cik_static.c b/drivers/gpu/hsa/radeon/kfd_sched_cik_static.c
 new file mode 100644
-index 0000000..9ce9d80
+index 0000000..26324c2
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/kfd_sched_cik_static.c
-@@ -0,0 +1,991 @@
+@@ -0,0 +1,992 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -3503,8 +3798,6 @@ index 0000000..9ce9d80
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Author: Andrew Lewycky
 + */
 +
 +#include <linux/log2.h>
@@ -4107,8 +4400,11 @@ index 0000000..9ce9d80
 +	struct cik_static_private *priv = kfd_scheduler_to_private(scheduler);
 +	struct cik_static_process *pp = kfd_process_to_private(scheduler_process);
 +
-+	release_vmid(priv, pp->vmid);
-+	kfree(pp);
++
++	if (priv && pp)	{
++		release_vmid(priv, pp->vmid);
++		kfree(pp);
++	}
 +}
 +
 +static bool allocate_hqd(struct cik_static_private *priv, unsigned int *queue)
@@ -4476,10 +4772,10 @@ index 0000000..9ce9d80
 +};
 diff --git a/drivers/gpu/hsa/radeon/kfd_scheduler.h b/drivers/gpu/hsa/radeon/kfd_scheduler.h
 new file mode 100644
-index 0000000..ba5d9c9
+index 0000000..9dc2994
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/kfd_scheduler.h
-@@ -0,0 +1,79 @@
+@@ -0,0 +1,77 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -4500,8 +4796,6 @@ index 0000000..ba5d9c9
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Author: Andrew Lewycky
 + */
 +
 +#ifndef KFD_SCHEDULER_H_INCLUDED
@@ -4561,10 +4855,10 @@ index 0000000..ba5d9c9
 +#endif
 diff --git a/drivers/gpu/hsa/radeon/kfd_topology.c b/drivers/gpu/hsa/radeon/kfd_topology.c
 new file mode 100644
-index 0000000..8e74eb1
+index 0000000..b7bb09b
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/kfd_topology.c
-@@ -0,0 +1,1201 @@
+@@ -0,0 +1,1202 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -4585,8 +4879,6 @@ index 0000000..8e74eb1
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Author: Evgeny Pinchuk
 + */
 +
 +#include <linux/types.h>
@@ -4595,6 +4887,7 @@ index 0000000..8e74eb1
 +#include <linux/errno.h>
 +#include <linux/acpi.h>
 +#include <linux/hash.h>
++#include <linux/cpufreq.h>
 +
 +#include "kfd_priv.h"
 +#include "kfd_crat.h"
@@ -4605,21 +4898,6 @@ index 0000000..8e74eb1
 +static struct kfd_system_properties sys_props;
 +
 +static DECLARE_RWSEM(topology_lock);
-+
-+
-+static uint8_t checksum_image(const void *buf, size_t len)
-+{
-+	uint8_t *p = (uint8_t *)buf;
-+	uint8_t sum = 0;
-+
-+	if (!buf)
-+		return 0;
-+
-+	while (len-- > 0)
-+		sum += *p++;
-+
-+	return sum;
-+		}
 +
 +struct kfd_dev *radeon_kfd_device_by_id(uint32_t gpu_id)
 +{
@@ -4665,9 +4943,9 @@ index 0000000..8e74eb1
 +	if (!size)
 +		return -EINVAL;
 +
-+/*
++	/*
 +	 * Fetch the CRAT table from ACPI
-+ */
++	 */
 +	status = acpi_get_table(CRAT_SIGNATURE, 0, &crat_table);
 +	if (status == AE_NOT_FOUND) {
 +		pr_warn("CRAT table not found\n");
@@ -4677,16 +4955,6 @@ index 0000000..8e74eb1
 +		pr_err("CRAT table error: %s\n", err);
 +		return -EINVAL;
 +	}
-+
-+	/*
-+	 * The checksum of the table should be verified
-+	 */
-+	if (checksum_image(crat_table, crat_table->length) ==
-+		crat_table->checksum) {
-+		pr_err("Bad checksum for the CRAT table\n");
-+		return -EINVAL;
-+}
-+
 +
 +	if (*size >= crat_table->length && crat_image != 0)
 +		memcpy(crat_image, crat_table, crat_table->length);
@@ -5280,9 +5548,10 @@ index 0000000..8e74eb1
 +		sysfs_show_32bit_prop(buffer, "location_id",
 +				dev->node_props.location_id);
 +		sysfs_show_32bit_prop(buffer, "max_engine_clk_fcompute",
-+				dev->node_props.max_engine_clk_fcompute);
++				kfd2kgd->get_max_engine_clock_in_mhz(
++					dev->gpu->kgd));
 +		ret = sysfs_show_32bit_prop(buffer, "max_engine_clk_ccompute",
-+				dev->node_props.max_engine_clk_ccompute);
++				cpufreq_quick_get_max(0)/1000);
 +	}
 +
 +	return ret;
@@ -5686,7 +5955,7 @@ index 0000000..8e74eb1
 +
 +	gpu_id = kfd_generate_gpu_id(gpu);
 +
-+	pr_info("Adding new GPU (ID: 0x%x) to topology\n", gpu_id);
++	pr_debug("kfd: Adding new GPU (ID: 0x%x) to topology\n", gpu_id);
 +
 +	down_write(&topology_lock);
 +	/*
@@ -5766,12 +6035,38 @@ index 0000000..8e74eb1
 +
 +	return res;
 +}
++
++/*
++ * When idx is out of bounds, the function will return NULL
++ */
++struct kfd_dev *kfd_topology_enum_kfd_devices(uint8_t idx)
++{
++
++	struct kfd_topology_device *top_dev;
++	struct kfd_dev *device = NULL;
++	uint8_t device_idx = 0;
++
++	down_read(&topology_lock);
++
++	list_for_each_entry(top_dev, &topology_device_list, list)
++		if (device_idx == idx) {
++			device = top_dev->gpu;
++			break;
++		} else {
++			device_idx++;
++		}
++
++	up_read(&topology_lock);
++
++	return device;
++
++}
 diff --git a/drivers/gpu/hsa/radeon/kfd_topology.h b/drivers/gpu/hsa/radeon/kfd_topology.h
 new file mode 100644
-index 0000000..7e05951
+index 0000000..989624b
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/kfd_topology.h
-@@ -0,0 +1,170 @@
+@@ -0,0 +1,168 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -5792,8 +6087,6 @@ index 0000000..7e05951
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Author: Evgeny Pinchuk
 + */
 +
 +#ifndef __KFD_TOPOLOGY_H__
@@ -5944,10 +6237,10 @@ index 0000000..7e05951
 +#endif /* __KFD_TOPOLOGY_H__ */
 diff --git a/drivers/gpu/hsa/radeon/kfd_vidmem.c b/drivers/gpu/hsa/radeon/kfd_vidmem.c
 new file mode 100644
-index 0000000..a8e4822
+index 0000000..d4d9186
 --- /dev/null
 +++ b/drivers/gpu/hsa/radeon/kfd_vidmem.c
-@@ -0,0 +1,55 @@
+@@ -0,0 +1,53 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -5968,8 +6261,6 @@ index 0000000..a8e4822
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Author: Andrew Lewycky
 + */
 +
 +#include "kfd_priv.h"
@@ -6003,25 +6294,8 @@ index 0000000..a8e4822
 +{
 +	kfd2kgd->unkmap_mem(kfd->kgd, (struct kgd_mem *)mem_obj);
 +}
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index faf0da4..1dd9f81 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -982,10 +982,10 @@ static void build_inv_iotlb_pasid(struct iommu_cmd *cmd, u16 devid, int pasid,
- 	address &= ~(0xfffULL);
- 
- 	cmd->data[0]  = devid;
--	cmd->data[0] |= (pasid & 0xff) << 16;
-+	cmd->data[0] |= ((pasid >> 8) & 0xff) << 16;
- 	cmd->data[0] |= (qdep  & 0xff) << 24;
- 	cmd->data[1]  = devid;
--	cmd->data[1] |= ((pasid >> 8) & 0xfff) << 16;
-+	cmd->data[1] |= (pasid & 0xff) << 16;
- 	cmd->data[2]  = lower_32_bits(address);
- 	cmd->data[2] |= CMD_INV_IOMMU_PAGES_GN_MASK;
- 	cmd->data[3]  = upper_32_bits(address);
 diff --git a/drivers/iommu/amd_iommu_v2.c b/drivers/iommu/amd_iommu_v2.c
-index 5208828..2abb333 100644
+index 203b2e6..2abb333 100644
 --- a/drivers/iommu/amd_iommu_v2.c
 +++ b/drivers/iommu/amd_iommu_v2.c
 @@ -90,13 +90,6 @@ static DEFINE_SPINLOCK(ps_lock);
@@ -6074,18 +6348,7 @@ index 5208828..2abb333 100644
  };
  
  static void set_pri_tag_status(struct pasid_state *pasid_state,
-@@ -504,8 +485,10 @@ static void do_fault(struct work_struct *work)
- 
- 	write = !!(fault->flags & PPR_FAULT_WRITE);
- 
-+	down_read(&fault->state->mm->mmap_sem);
- 	npages = get_user_pages(fault->state->task, fault->state->mm,
- 				fault->address, 1, write, 0, &page, NULL);
-+	up_read(&fault->state->mm->mmap_sem);
- 
- 	if (npages == 1) {
- 		put_page(page);
-@@ -947,19 +930,11 @@ static int __init amd_iommu_v2_init(void)
+@@ -949,19 +930,11 @@ static int __init amd_iommu_v2_init(void)
  	if (iommu_wq == NULL)
  		goto out_free;
  
@@ -6105,7 +6368,7 @@ index 5208828..2abb333 100644
  out_free:
  	free_pages((unsigned long)state_table, get_order(state_table_size));
  
-@@ -1000,8 +975,6 @@ static void __exit amd_iommu_v2_exit(void)
+@@ -1002,8 +975,6 @@ static void __exit amd_iommu_v2_exit(void)
  
  	state_table_size = MAX_DEVICES * sizeof(struct device_state *);
  	free_pages((unsigned long)state_table, get_order(state_table_size));
@@ -6140,10 +6403,10 @@ index deca874..0167e5f 100644
  static inline int mm_has_notifiers(struct mm_struct *mm)
 diff --git a/include/linux/radeon_kfd.h b/include/linux/radeon_kfd.h
 new file mode 100644
-index 0000000..d084b28
+index 0000000..ede6e35
 --- /dev/null
 +++ b/include/linux/radeon_kfd.h
-@@ -0,0 +1,101 @@
+@@ -0,0 +1,100 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -6164,9 +6427,6 @@ index 0000000..d084b28
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Authors: Andrew Lewycky
-+ *          Oded Gabbay
 + */
 +
 +/*
@@ -6237,6 +6497,8 @@ index 0000000..d084b28
 +	/* GRBM_GFX_INDEX mutex */
 +	void (*lock_grbm_gfx_idx)(struct kgd_dev *kgd);
 +	void (*unlock_grbm_gfx_idx)(struct kgd_dev *kgd);
++
++	uint32_t (*get_max_engine_clock_in_mhz)(struct kgd_dev *kgd);
 +};
 +
 +bool kgd2kfd_init(unsigned interface_version,
@@ -6247,10 +6509,10 @@ index 0000000..d084b28
 +
 diff --git a/include/uapi/linux/kfd_ioctl.h b/include/uapi/linux/kfd_ioctl.h
 new file mode 100644
-index 0000000..b3d3548
+index 0000000..45696ec
 --- /dev/null
 +++ b/include/uapi/linux/kfd_ioctl.h
-@@ -0,0 +1,93 @@
+@@ -0,0 +1,122 @@
 +/*
 + * Copyright 2014 Advanced Micro Devices, Inc.
 + *
@@ -6271,8 +6533,6 @@ index 0000000..b3d3548
 + * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 + * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 + * OTHER DEALINGS IN THE SOFTWARE.
-+ *
-+ * Author: Andrew Lewycky
 + */
 +
 +#ifndef KFD_IOCTL_H_INCLUDED
@@ -6284,7 +6544,7 @@ index 0000000..b3d3548
 +#define KFD_IOCTL_CURRENT_VERSION 1
 +
 +/* The 64-bit ABI is the authoritative version. */
-+#pragma pack(push, 8)
++#pragma pack(push, 1)
 +
 +struct kfd_ioctl_get_version_args {
 +	uint32_t min_supported_version;	/* from KFD */
@@ -6297,15 +6557,15 @@ index 0000000..b3d3548
 +
 +struct kfd_ioctl_create_queue_args {
 +	uint64_t ring_base_address;	/* to KFD */
++	uint64_t write_pointer_address;	/* to KFD */
++	uint64_t read_pointer_address;	/* to KFD */
++	uint64_t doorbell_address;	/* from KFD */
++
 +	uint32_t ring_size;		/* to KFD */
 +	uint32_t gpu_id;		/* to KFD */
 +	uint32_t queue_type;		/* to KFD */
 +	uint32_t queue_percentage;	/* to KFD */
 +	uint32_t queue_priority;	/* to KFD */
-+	uint64_t write_pointer_address;	/* to KFD */
-+	uint64_t read_pointer_address;	/* to KFD */
-+
-+	uint64_t doorbell_address;	/* from KFD */
 +	uint32_t queue_id;		/* from KFD */
 +};
 +
@@ -6318,28 +6578,59 @@ index 0000000..b3d3548
 +#define KFD_IOC_CACHE_POLICY_NONCOHERENT 1
 +
 +struct kfd_ioctl_set_memory_policy_args {
++	uint64_t alternate_aperture_base;	/* to KFD */
++	uint64_t alternate_aperture_size;	/* to KFD */
++
 +	uint32_t gpu_id;			/* to KFD */
 +	uint32_t default_policy;		/* to KFD */
 +	uint32_t alternate_policy;		/* to KFD */
-+	uint64_t alternate_aperture_base;	/* to KFD */
-+	uint64_t alternate_aperture_size;	/* to KFD */
 +};
 +
 +struct kfd_ioctl_get_clock_counters_args {
-+	uint32_t gpu_id;		/* to KFD */
 +	uint64_t gpu_clock_counter;	/* from KFD */
 +	uint64_t cpu_clock_counter;	/* from KFD */
 +	uint64_t system_clock_counter;	/* from KFD */
 +	uint64_t system_clock_freq;	/* from KFD */
++	uint32_t gpu_id;		/* to KFD */
++};
++
++#define NUM_OF_SUPPORTED_GPUS 7
++
++struct kfd_process_device_apertures {
++	uint64_t lds_base;		/* from KFD */
++	uint64_t lds_limit;		/* from KFD */
++	uint64_t scratch_base;		/* from KFD */
++	uint64_t scratch_limit;		/* from KFD */
++	uint64_t gpuvm_base;		/* from KFD */
++	uint64_t gpuvm_limit;		/* from KFD */
++	uint32_t gpu_id;		/* from KFD */
++};
++
++struct kfd_ioctl_get_process_apertures_args {
++	struct kfd_process_device_apertures process_apertures[NUM_OF_SUPPORTED_GPUS];/* from KFD */
++	uint8_t num_of_nodes; /* from KFD, should be in the range [1 - NUM_OF_SUPPORTED_GPUS]*/
++};
++
++struct kfd_ioctl_pmc_acquire_access_args {
++	uint64_t trace_id;	/* to KFD */
++	uint32_t gpu_id;	/* to KFD */
++};
++
++struct kfd_ioctl_pmc_release_access_args {
++	uint64_t trace_id;	/* to KFD */
++	uint32_t gpu_id;	/* to KFD */
 +};
 +
 +#define KFD_IOC_MAGIC 'K'
 +
-+#define KFD_IOC_GET_VERSION	_IOR(KFD_IOC_MAGIC, 1, struct kfd_ioctl_get_version_args)
-+#define KFD_IOC_CREATE_QUEUE	_IOWR(KFD_IOC_MAGIC, 2, struct kfd_ioctl_create_queue_args)
-+#define KFD_IOC_DESTROY_QUEUE	_IOWR(KFD_IOC_MAGIC, 3, struct kfd_ioctl_destroy_queue_args)
-+#define KFD_IOC_SET_MEMORY_POLICY	_IOW(KFD_IOC_MAGIC, 4, struct kfd_ioctl_set_memory_policy_args)
++#define KFD_IOC_GET_VERSION		_IOR(KFD_IOC_MAGIC,  1, struct kfd_ioctl_get_version_args)
++#define KFD_IOC_CREATE_QUEUE		_IOWR(KFD_IOC_MAGIC, 2, struct kfd_ioctl_create_queue_args)
++#define KFD_IOC_DESTROY_QUEUE		_IOWR(KFD_IOC_MAGIC, 3, struct kfd_ioctl_destroy_queue_args)
++#define KFD_IOC_SET_MEMORY_POLICY	_IOW(KFD_IOC_MAGIC,  4, struct kfd_ioctl_set_memory_policy_args)
 +#define KFD_IOC_GET_CLOCK_COUNTERS	_IOWR(KFD_IOC_MAGIC, 5, struct kfd_ioctl_get_clock_counters_args)
++#define KFD_IOC_GET_PROCESS_APERTURES	_IOR(KFD_IOC_MAGIC,  6, struct kfd_ioctl_get_process_apertures_args)
++#define KFD_IOC_PMC_ACQUIRE_ACCESS	_IOW(KFD_IOC_MAGIC,  7, struct kfd_ioctl_pmc_acquire_access_args)
++#define KFD_IOC_PMC_RELEASE_ACCESS	_IOW(KFD_IOC_MAGIC,  8, struct kfd_ioctl_pmc_release_access_args)
 +
 +#pragma pack(pop)
 +
@@ -6386,10 +6677,10 @@ index 41cefdf..0fd3a95 100644
  	}
  
 diff --git a/mm/rmap.c b/mm/rmap.c
-index 8fc049f..849b99d 100644
+index 83bfafa..c8b5fe7 100644
 --- a/mm/rmap.c
 +++ b/mm/rmap.c
-@@ -1210,13 +1210,17 @@ int try_to_unmap_one(struct page *page, struct vm_area_struct *vma,
+@@ -1220,13 +1220,17 @@ int try_to_unmap_one(struct page *page, struct vm_area_struct *vma,
  	} else
  		dec_mm_counter(mm, MM_FILEPAGES);
  
