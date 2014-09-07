@@ -1,15 +1,15 @@
-# Copyright 1999-2013 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/www-client/firefox-bin/firefox-bin-21.0.ebuild,v 1.4 2013/05/15 13:17:38 jdhore Exp $
+# $Header: /var/cvsroot/gentoo-x86/www-client/firefox-bin/firefox-bin-32.0.ebuild,v 1.1 2014/09/03 22:24:01 axs Exp $
 
 EAPI="5"
 
 # Can be updated using scripts/get_langs.sh from mozilla overlay
-#MOZ_LANGS=(af ak ar as ast be bg bn-BD bn-IN br bs ca cs csb cy da de el en
+#MOZ_LANGS=(af ar as ast be bg bn-BD bn-IN br bs ca cs csb cy da de el en
 #en-GB en-US en-ZA eo es-AR es-CL es-ES es-MX et eu fa fi fr fy-NL ga-IE gd gl
-#gu-IN he hi-IN hr hu hy-AM id is it ja kk kn ko ku lg lt lv mai mk ml mr nb-NO
-#nl nn-NO nso or pa-IN pl pt-BR pt-PT rm ro ru si sk sl son sq sr sv-SE ta ta-LK
-#te th tr uk vi zh-CN zh-TW zu)
+#gu-IN he hi-IN hr hu hy-AM id is it ja kk kn ko ku lt lv mai mk ml mr nb-NO
+#nl nn-NO or pa-IN pl pt-BR pt-PT rm ro ru si sk sl son sq sr sv-SE ta
+#te tr uk vi zh-CN zh-TW zu)
 MOZ_LANGS=(en en-US ja)
 
 # Convert the ebuild version to the upstream mozilla version, used by mozlinguas
@@ -35,19 +35,19 @@ RESTRICT="strip mirror"
 KEYWORDS="-* ~amd64 ~x86"
 SLOT="0"
 LICENSE="MPL-2.0 GPL-2 LGPL-2.1"
-IUSE="startup-notification"
+IUSE="selinux startup-notification"
 
-DEPEND="app-arch/unzip"
+DEPEND="app-arch/unzip
+	selinux? ( sec-policy/selinux-mozilla )"
 RDEPEND="dev-libs/dbus-glib
 	virtual/freedesktop-icon-theme
 	x11-libs/libXrender
 	x11-libs/libXt
 	x11-libs/libXmu
 
+	selinux? ( sec-policy/selinux-mozilla )
 	>=x11-libs/gtk+-2.2:2
 	>=media-libs/alsa-lib-1.0.16
-
-	!net-libs/libproxy[spidermonkey]
 "
 
 QA_PREBUILT="
@@ -88,7 +88,7 @@ src_install() {
 	insinto "/usr/share/icons/hicolor/128x128/apps"
 	newins "${icon_path}/../../../icons/mozicon128.png" "${icon}.png" || die
 	# Install a 48x48 icon into /usr/share/pixmaps for legacy DEs
-	newicon "${S}"/browser/chrome/icons/default/default48.png ${PN}-icon.png
+	newicon "${S}"/browser/chrome/icons/default/default48.png ${PN}.png
 	domenu "${FILESDIR}"/${PN}.desktop
 	sed -i -e "s:@NAME@:${name}:" -e "s:@ICON@:${icon}:" \
 		"${ED}/usr/share/applications/${PN}.desktop" || die
@@ -105,8 +105,8 @@ src_install() {
 	# Fix prefs that make no sense for a system-wide install
 	insinto ${MOZILLA_FIVE_HOME}/defaults/pref/
 	doins "${FILESDIR}"/local-settings.js
-	insinto ${MOZILLA_FIVE_HOME}/
-	doins "${FILESDIR}"/all-gentoo.js
+	# Copy preferences file so we can do a simple rename.
+	cp "${FILESDIR}"/all-gentoo-1.js  "${D}"${MOZILLA_FIVE_HOME}/all-gentoo.js
 
 	# Install language packs
 	mozlinguas_src_install
@@ -132,7 +132,8 @@ src_install() {
 
 	# revdep-rebuild entry
 	insinto /etc/revdep-rebuild
-	doins "${FILESDIR}"/10${PN} || die
+	echo "SEARCH_DIRS_MASK=${MOZILLA_FIVE_HOME}" >> ${T}/10${PN}
+	doins "${T}"/10${PN} || die
 
 	# Plugins dir
 	share_plugins_dir
