@@ -1,0 +1,58 @@
+--- src/cpufreq.c
++++ src/cpufreq.c
+@@ -26,7 +26,11 @@
+ 
+ #define MODULE_NAME "cpufreq"
+ 
++static const char *SCALING_FREQ = "scaling_cur_freq";
++static const char *CPUINFO_FREQ = "cpuinfo_cur_freq";
++
+ static int num_cpu = 0;
++static char *freq_filename;
+ 
+ static int cpufreq_init (void)
+ {
+@@ -34,17 +38,28 @@
+ 	char filename[256];
+ 
+ 	num_cpu = 0;
++	freq_filename = SCALING_FREQ;
+ 
+ 	while (1)
+ 	{
+ 		status = ssnprintf (filename, sizeof (filename),
+-				"/sys/devices/system/cpu/cpu%d/cpufreq/"
+-				"scaling_cur_freq", num_cpu);
++				"/sys/devices/system/cpu/cpu%d/cpufreq/%s",
++				num_cpu, SCALING_FREQ);
+ 		if ((status < 1) || ((unsigned int)status >= sizeof (filename)))
+ 			break;
+ 
+-		if (access (filename, R_OK))
+-			break;
++		if (access (filename, R_OK)) {
++			status = ssnprintf (filename, sizeof (filename),
++				"/sys/devices/system/cpu/cpu%d/cpufreq/%s",
++				num_cpu, CPUINFO_FREQ);
++			if ((status < 1) || ((unsigned int)status >= sizeof (filename)))
++				break;
++
++			if (access (filename, R_OK))
++				break;
++
++			freq_filename = CPUINFO_FREQ;
++		}
+ 
+ 		num_cpu++;
+ 	}
+@@ -88,8 +103,8 @@
+ 	for (i = 0; i < num_cpu; i++)
+ 	{
+ 		status = ssnprintf (filename, sizeof (filename),
+-				"/sys/devices/system/cpu/cpu%d/cpufreq/"
+-				"scaling_cur_freq", i);
++				"/sys/devices/system/cpu/cpu%d/cpufreq/%s",
++				i, freq_filename);
+ 		if ((status < 1) || ((unsigned int)status >= sizeof (filename)))
+ 			return (-1);
+ 

@@ -1,0 +1,13 @@
+diff --git src/hddtemp.c src/hddtemp.c
+index 7029e1e..72f6ff4 100644
+--- src/hddtemp.c
++++ src/hddtemp.c
+@@ -247,7 +247,7 @@
+
+ static int hddtemp_read (void)
+ {
+-	char buf[1024];
++	char buf[8192];
+ 	char *fields[128];
+ 	char *ptr;
+ 	char *saveptr;
