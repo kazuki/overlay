@@ -8,7 +8,7 @@ inherit distutils
 
 DESCRIPTION="Jubatus's Python client"
 HOMEPAGE="http://jubat.us/"
-SRC_URI="https://github.com/jubatus/jubatus-python-client/tarball/${PV} -> ${P}.tar.gz"
+SRC_URI="https://pypi.python.org/packages/source/j/jubatus/jubatus-${PV}.tar.gz -> ${P}.tar.gz"
 LICENSE="GPL-2"
 
 SLOT="0"
@@ -22,17 +22,17 @@ src_unpack() {
     unpack ${A}
 
     # Rename github packaged dir name to standard dir name
-    mv ${WORKDIR}/jubatus-jubatus-python-client-* ${WORKDIR}/${P}
+    mv ${WORKDIR}/jubatus-${PV} ${WORKDIR}/${P}
 }
 
 src_compile() {
-	distutils_src_compile
+    distutils_src_compile
 }
 
 src_install() {
-	distutils_src_install
+    distutils_src_install
 }
 
 pkg_postinst() {
-	distutils_pkg_postinst
+    distutils_pkg_postinst
 }
