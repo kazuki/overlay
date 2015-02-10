@@ -1,19 +1,17 @@
-# Copyright 1999-2011 Gentoo Foundation
-# Distributed under the terms of the GNU General Public License v2
-# $Header: $
-
 EAPI="3"
 
-DESCRIPTION="mpio for Jubatus"
+DESCRIPTION="msgpack-rpc for Jubatus"
 HOMEPAGE="http://jubat.us/"
 SRC_URI="https://github.com/jubatus/jubatus-msgpack-rpc/archive/${PV}.tar.gz -> ${P}.tar.gz"
 LICENSE="GPL-2"
 
 SLOT="0"
-KEYWORDS="~x86 ~amd64"
+KEYWORDS="~amd64"
 IUSE=""
 
-DEPEND="dev-lang/ruby"
+DEPEND=">=dev-libs/msgpack-0.5.2
+        >=dev-cpp/jubatus-mpio-0.4.0
+        dev-lang/ruby"
 
 src_configure() {
     cd cpp && ./bootstrap && econf || die "configure failed"

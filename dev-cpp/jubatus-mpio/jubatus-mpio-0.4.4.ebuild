@@ -10,11 +10,10 @@ SRC_URI="https://github.com/jubatus/jubatus-mpio/archive/${PV}.tar.gz -> ${P}.ta
 LICENSE="GPL-2"
 
 SLOT="0"
-KEYWORDS="~x86 ~amd64"
+KEYWORDS="~amd64"
 IUSE=""
 
 DEPEND=">=sys-devel/gcc-4.1
-        >=sys-libs/glibc-2.8
         dev-lang/ruby"
 
 src_configure() {
