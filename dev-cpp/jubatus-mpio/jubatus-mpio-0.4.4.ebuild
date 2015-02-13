@@ -2,25 +2,19 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-EAPI="3"
+EAPI="5"
 
 DESCRIPTION="mpio for Jubatus"
 HOMEPAGE="http://jubat.us/"
-SRC_URI="https://github.com/jubatus/jubatus-mpio/archive/${PV}.tar.gz -> ${P}.tar.gz"
-LICENSE="GPL-2"
+SRC_URI="http://download.jubat.us/files/source/jubatus_mpio/jubatus_mpio-${PV}.tar.gz -> ${P}.tar.gz"
+LICENSE="Apache-2.0"
 
 SLOT="0"
 KEYWORDS="~amd64"
-IUSE=""
 
-DEPEND=">=sys-devel/gcc-4.1
-        dev-lang/ruby"
+DEPEND=">=sys-devel/gcc-4.1"
 
-src_configure() {
-    ./bootstrap
-    econf || die "configure failed"
-}
-
-src_install() {
-    emake DESTDIR="${D}" install || die "install failed"
+src_unpack() {
+    unpack ${A}
+    mv "${WORKDIR}/${P/-/_}" "${WORKDIR}/${P}"
 }
