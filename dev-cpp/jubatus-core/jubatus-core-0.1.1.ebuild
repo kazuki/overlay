@@ -13,6 +13,7 @@ KEYWORDS="~amd64"
 IUSE=""
 
 DEPEND=">=dev-libs/msgpack-0.5.7
+       <dev-libs/msgpack-1.0.0
        dev-libs/oniguruma"
 
 src_unpack() {
