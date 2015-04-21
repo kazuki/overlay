@@ -1,10 +1,8 @@
-EAPI="3"
+EAPI=5
 
-PYTHON_DEPEND="2 3"
-SUPPORT_PYTHON_ABIS="1"
-RESTRICT_PYTHON_ABIS=""
+PYTHON_COMPAT=( python2_7 )
 
-inherit distutils
+inherit distutils-r1
 
 DESCRIPTION="Jubatus's Python client"
 HOMEPAGE="http://jubat.us/"
@@ -15,7 +13,7 @@ SLOT="0"
 KEYWORDS="~x86 ~amd64"
 IUSE=""
 
-RDEPEND="dev-python/msgpack"
+RDEPEND="dev-python/msgpack-rpc-python"
 DEPEND="${RDEPEND}"
 
 src_unpack() {
@@ -23,16 +21,4 @@ src_unpack() {
 
     # Rename github packaged dir name to standard dir name
     mv ${WORKDIR}/jubatus-${PV} ${WORKDIR}/${P}
-}
-
-src_compile() {
-    distutils_src_compile
-}
-
-src_install() {
-    distutils_src_install
-}
-
-pkg_postinst() {
-    distutils_pkg_postinst
 }
