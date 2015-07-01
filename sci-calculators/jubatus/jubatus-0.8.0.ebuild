@@ -12,7 +12,7 @@ SLOT="0"
 KEYWORDS="~amd64"
 IUSE="zookeeper mecab ux"
 
-DEPEND=">=dev-cpp/jubatus-core-0.1.2
+DEPEND=">=dev-cpp/jubatus-core-0.2.0
         >=dev-cpp/jubatus-mpio-0.4.1
         >=dev-cpp/jubatus-msgpack-rpc-0.4.1
         >=dev-libs/log4cxx-0.10.0
