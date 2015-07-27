@@ -21,7 +21,4 @@ src_unpack() {
 
     # Rename github packaged dir name to standard dir name
     mv ${WORKDIR}/jubatus-${PV} ${WORKDIR}/${P}
-
-    cd "${S}"
-    epatch "${FILESDIR}/py3.patch"
 }
