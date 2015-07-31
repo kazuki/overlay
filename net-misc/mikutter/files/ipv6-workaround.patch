@@ -1,0 +1,34 @@
+--- mikutter/core/mui/gtk_web_image_loader.rb	2015-07-19 20:05:20.000000000 +0900
++++ mikutter/core/mui/gtk_web_image_loader.rb	2015-07-31 23:30:56.817579990 +0900
+@@ -8,6 +8,10 @@
+ require 'uri'
+ require 'thread'
+ require 'fileutils'
++require 'resolv'
++require 'set'
++
++IPV6_BLACKLIST = Set.new(["pbs.twimg.com"])
+ 
+ module Gdk::WebImageLoader
+   extend Gdk::WebImageLoader
+@@ -253,6 +257,12 @@
+     result = nil
+     atomic{
+       @http_pool = Hash.new{|h, k|h[k] = Hash.new{|_h, _k|_h[_k] = {} } } if not defined? @http_pool
++
++      if scheme == 'http' and IPV6_BLACKLIST.include?(host) then
++        dns = Resolv::DNS.new()
++        host = dns.getresource(host, Resolv::DNS::Resource::IN::A).address.to_s
++      end
++      
+       if not @http_pool[host][port][scheme]
+         pool = []
+         @http_pool[host][port][scheme] = Queue.new
+@@ -280,6 +290,7 @@
+   def get_icon_via_http(url)
+     uri = Addressable::URI.parse(url)
+     request = Net::HTTP::Get.new(uri.request_uri)
++    request['Host'] = uri.host
+     request['Connection'] = 'Keep-Alive'
+     http(uri.host, uri.port, uri.scheme) do |http|
+       begin
