@@ -24,12 +24,13 @@ src_unpack() {
 
 src_install() {
 	insinto /lib/firmware/radeon
+	dosym radeon /lib/firmware/amdgpu
 	FILES=( *.bin )
 	doins ${FILES[@]} || die "doins failed"
 }
 
 pkg_postinst() {
-	if linux_config_exists && linux_chkconfig_builtin DRM_RADEON; then
+	if linux_config_exists && ( linux_chkconfig_builtin DRM_RADEON || linux_chkconfig_builtin DRM_AMDGPU ); then
 		if ! linux_chkconfig_present FIRMWARE_IN_KERNEL || \
 			! [[ "$(linux_chkconfig_string EXTRA_FIRMWARE)" == *_rlc.bin* ]]; then
 			ewarn "Your kernel has radeon DRM built-in but not the IRQ microcode."
