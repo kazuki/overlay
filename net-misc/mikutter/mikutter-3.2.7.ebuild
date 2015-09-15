@@ -54,7 +54,6 @@ all_ruby_unpack() {
 	else
 		default
 	fi
-    epatch "${FILESDIR}"/ipv6-workaround.patch
 }
 
 each_ruby_install() {
