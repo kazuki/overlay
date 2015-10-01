@@ -1,10 +1,10 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/net-misc/mikutter/mikutter-3.1.1.ebuild,v 1.2 2015/03/21 19:42:27 jlec Exp $
+# $Id$
 
 EAPI=5
 
-USE_RUBY="ruby20"
+USE_RUBY="ruby20 ruby21"
 
 inherit eutils ruby-ng
 
@@ -45,8 +45,8 @@ ruby_add_rdepend "dev-ruby/addressable
 	dev-ruby/ruby-hmac
 	dev-ruby/typed-array
 	virtual/ruby-ssl
-    dev-ruby/nokogiri
-    dev-ruby/httpclient"
+	dev-ruby/nokogiri
+	dev-ruby/httpclient"
 
 all_ruby_unpack() {
 	if [ "${PV}" = "9999" ];then
@@ -57,17 +57,24 @@ all_ruby_unpack() {
 }
 
 each_ruby_install() {
+	local rubyversion
+
+	#if use ruby_targets_ruby22; then
+	#	rubyversion=ruby22
+	if use ruby_targets_ruby21; then
+		rubyversion=ruby21
+	elif use ruby_targets_ruby20; then
+		rubyversion=ruby20
+	else
+		die "Select Ruby verion 2.x"
+	fi
+
 	exeinto /usr/share/mikutter
 	doexe mikutter.rb
 	insinto /usr/share/mikutter
 	doins -r core plugin
-	#if use ruby_targets_ruby21; then
-	#	sed -e 's/ruby19/ruby21/' "${FILESDIR}"/mikutter
-	if use ruby_targets_ruby20; then
-		sed -e 's/ruby19/ruby20/' "${FILESDIR}"/mikutter
-	else
-		die
-	fi | newbin - mikutter
+	sed -e "s/ruby19/${rubyversion}/" "${FILESDIR}"/mikutter \
+		| newbin - mikutter
 	dodoc README
 	make_desktop_entry mikutter Mikutter \
 		/usr/share/mikutter/core/skin/data/icon.png
