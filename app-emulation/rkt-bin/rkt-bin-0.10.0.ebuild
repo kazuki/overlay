@@ -25,7 +25,7 @@ pkg_setup() {
 src_install() {
 	dobin "${S}"/rkt
 	dobin "${S}"/stage1-coreos.aci
-	dobin "${S}"/stage1-lkvm.aci
+	dobin "${S}"/stage1-kvm.aci
 
 	systemd_dounit ${FILESDIR}/rkt-gc.service
 	systemd_dounit ${FILESDIR}/rkt-gc.timer
