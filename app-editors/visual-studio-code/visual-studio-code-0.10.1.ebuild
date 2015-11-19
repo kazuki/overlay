@@ -9,7 +9,7 @@ inherit eutils
 DESCRIPTION="Multiplatform Visual Studio Code from Microsoft"
 HOMEPAGE="https://code.visualstudio.com"
 SRC_URI="
-	amd64? ( https://az764295.vo.msecnd.net/public/${PV}/VSCode-linux64.zip -> ${P}.zip )
+	amd64? ( https://az764295.vo.msecnd.net/public/${PV}-release/VSCode-linux64.zip -> ${P}.zip )
 "
 
 LICENSE="Microsoft"
@@ -44,10 +44,6 @@ src_install(){
 	insinto "/usr/share/pixmaps"
 	doins ${FILESDIR}/${PN}.png
 	fperms +x "/opt/${PN}/Code"
-	fperms +x "/opt/${PN}/libffmpegsumo.so"
-	fperms +x "/opt/${PN}/libgcrypt.so.11"
-	fperms +x "/opt/${PN}/libnode.so"
-	fperms +x "/opt/${PN}/libnotify.so.4"
 }
 
 pkg_postinst(){
