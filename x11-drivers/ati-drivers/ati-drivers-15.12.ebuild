@@ -9,11 +9,11 @@ inherit eutils multilib-build linux-info linux-mod systemd toolchain-funcs versi
 
 DESCRIPTION="Ati precompiled drivers for Radeon Evergreen (HD5000 Series) and newer chipsets"
 HOMEPAGE="http://www.amd.com"
-RUN="${WORKDIR}/fglrx-15.30.1025/amd-driver-installer-15.30.1025-x86.x86_64.run"
+RUN="${WORKDIR}/fglrx-15.302/amd-driver-installer-15.302-x86.x86_64.run"
 SLOT="1"
 # Uses javascript for download YESSSS
 #DRIVERS_URI="http://www2.ati.com/drivers/linux/amd-catalyst-13.12-linux-x86.x86_64.zip"
-DRV_VER="radeon-crimson-${PV}-15.30.1025.zip"
+DRV_VER="radeon-crimson-${PV}-15.302-151217a-297685e.zip"
 DRIVERS_URI="mirror://gentoo/${DRV_VER}"
 SDK_VER="xvba-sdk-0.74-404001.tar.gz"
 XVBA_SDK_URI="http://developer.amd.com/wordpress/media/2012/10/${SDK_VER}"
