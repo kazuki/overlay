@@ -1,0 +1,14 @@
+--- common/lib/modules/fglrx/build_mod/firegl_public.c.orig	2016-01-11 17:09:33.660249695 +0900
++++ common/lib/modules/fglrx/build_mod/firegl_public.c	2016-01-11 17:10:54.820500754 +0900
+@@ -6483,7 +6483,11 @@
+       if (!(fpu->state->xsave.xsave_hdr.xstate_bv & XSTATE_FP))
+ #else
+ 	  copy_xregs_to_kernel(&fpu->state.xsave);
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4,4,0)
+       if (!(fpu->state.xsave.header.xfeatures & XSTATE_FP))
++#else
++      if (!(fpu->state.xsave.header.xfeatures & XFEATURE_MASK_FP))
++#endif
+ #endif
+          return 1;
+    } else if (static_cpu_has(X86_FEATURE_FXSR)) {

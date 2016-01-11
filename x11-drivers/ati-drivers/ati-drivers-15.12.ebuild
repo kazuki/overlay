@@ -327,6 +327,9 @@ src_prepare() {
 	epatch "${FILESDIR}/15.9-sep_printf.patch"
 	epatch "${FILESDIR}/15.9-mtrr.patch"
 
+	# Comple fix for Linux Kernel >= 4.4
+	epatch "${FILESDIR}/kernel-4.4.patch"
+
 	epatch_user
 
 	cd "${MODULE_DIR}"
