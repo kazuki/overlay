@@ -1,3 +1,0 @@
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/rkt gc --grace-period=5m

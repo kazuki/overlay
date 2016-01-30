@@ -1,6 +1,0 @@
-[Timer]
-OnActiveSec=0s
-OnUnitActiveSec=5m
-
-[Install]
-WantedBy=default.target
