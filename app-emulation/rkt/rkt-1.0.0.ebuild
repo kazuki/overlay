@@ -30,6 +30,10 @@ src_prepare() {
     ./autogen.sh
 }
 
+src_configure() {
+    econf --disable-tpm
+}
+
 src_compile() {
     ARCH=x86_64 emake || die "emake failed"
 }
