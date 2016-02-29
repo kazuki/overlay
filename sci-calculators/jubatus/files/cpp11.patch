@@ -1,0 +1,60 @@
+diff --git a/jubatus/server/common/mprpc/rpc_response.hpp b/jubatus/server/common/mprpc/rpc_response.hpp
+index 7937307..c15bef2 100644
+--- a/jubatus/server/common/mprpc/rpc_response.hpp
++++ b/jubatus/server/common/mprpc/rpc_response.hpp
+@@ -33,9 +33,15 @@ class rpc_response_t {
+   }
+   explicit rpc_response_t(msgpack::rpc::future f)
+       : zone(f.zone().release()) {
++#if __cplusplus < 201103
+     response.a1 = 0;  // NOTE: dummy value
+     response.a2 = f.error();
+     response.a3 = f.result();
++#else
++    std::get<1>(response) = 0;
++    std::get<2>(response) = f.error();
++    std::get<3>(response) = f.result();
++#endif
+   }
+ 
+  public:
+@@ -47,19 +53,39 @@ class rpc_response_t {
+   mp::shared_ptr<msgpack::zone> zone;
+ 
+   bool has_error() const {
++#if __cplusplus < 201103
+     return !response.a2.is_nil();
++#else
++    return !std::get<2>(response).is_nil();
++#endif
+   }
+   uint32_t msgid() const {
++#if __cplusplus < 201103
+     return response.a1;
++#else
++    return std::get<1>(response);
++#endif
+   }
+   msgpack::object& error() {
++#if __cplusplus < 201103
+     return response.a2;
++#else
++    return std::get<2>(response);
++#endif
+   }
+   template<typename T> const T as() const {
++#if __cplusplus < 201103
+     return response.a3.as<T>();
++#else
++    return std::get<3>(response).as<T>();
++#endif
+   }
+   msgpack::object operator()() const {
++#if __cplusplus < 201103
+     return response.a3;
++#else
++    return std::get<3>(response);
++#endif
+   }
+ };
+ 

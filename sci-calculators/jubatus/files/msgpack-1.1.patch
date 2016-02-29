@@ -1,0 +1,108 @@
+diff --git a/jubatus-client.pc.in b/jubatus-client.pc.in
+index 56842fd..ef317dc 100644
+--- a/jubatus-client.pc.in
++++ b/jubatus-client.pc.in
+@@ -7,4 +7,4 @@ Name: @PACKAGE@
+ Description: Client Library for Distributed Online Machine Learning
+ Version: @VERSION@
+ Cflags: -I${includedir}
+-Libs: -L${libdir} -lmsgpack -ljubatus_mpio -ljubatus_msgpack-rpc
++Libs: -L${libdir} -ljubatus_mpio -ljubatus_msgpack-rpc
+diff --git a/jubatus.pc.in b/jubatus.pc.in
+index 425a137..71e0218 100644
+--- a/jubatus.pc.in
++++ b/jubatus.pc.in
+@@ -8,4 +8,4 @@ Description: Framework and Library for Distributed Online Machine Learning
+ Version: @VERSION@
+ Requires: liblog4cxx >= 0.10.0
+ Cflags: -I${includedir}
+-Libs: -L${libdir} -ljubaserv_framework -ljubaserv_mixer -ljubaserv_common -ljubaserv_common_mprpc -ljubaserv_common_logger -lmsgpack -ljubatus_mpio -ljubatus_msgpack-rpc
++Libs: -L${libdir} -ljubaserv_framework -ljubaserv_mixer -ljubaserv_common -ljubaserv_common_mprpc -ljubaserv_common_logger -ljubatus_mpio -ljubatus_msgpack-rpc
+diff --git a/jubatus/server/common/mprpc/rpc_mclient.cpp b/jubatus/server/common/mprpc/rpc_mclient.cpp
+index 6605172..781b516 100644
+--- a/jubatus/server/common/mprpc/rpc_mclient.cpp
++++ b/jubatus/server/common/mprpc/rpc_mclient.cpp
+@@ -72,7 +72,8 @@ rpc_response_t rpc_mclient::wait_one(
+ 
+ std::string create_error_string(const msgpack::object& error) {
+   switch (error.type) {
+-    case msgpack::type::RAW:
++    case msgpack::type::STR:
++    case msgpack::type::BIN:
+       return error.as<std::string>();
+ 
+     case msgpack::type::POSITIVE_INTEGER:
+diff --git a/jubatus/server/framework/mixer/linear_mixer.cpp b/jubatus/server/framework/mixer/linear_mixer.cpp
+index 7ee9e0d..e2bde2c 100644
+--- a/jubatus/server/framework/mixer/linear_mixer.cpp
++++ b/jubatus/server/framework/mixer/linear_mixer.cpp
+@@ -464,12 +464,12 @@ void linear_mixer::mix() {
+           }
+ 
+           msgpack::object res = diff_result.response[i]();
+-          if (res.type != msgpack::type::RAW) {
++          if (res.type != msgpack::type::BIN) {
+             continue;
+           }
+ 
+           msgpack::unpacked msg;
+-          msgpack::unpack(&msg, res.via.raw.ptr, res.via.raw.size);
++          msgpack::unpack(&msg, res.via.bin.ptr, res.via.bin.size);
+           msgpack::object o = msg.get();
+ 
+           diffs++;
+diff --git a/jubatus/server/framework/mixer/push_mixer.cpp b/jubatus/server/framework/mixer/push_mixer.cpp
+index 2b4e765..af25484 100644
+--- a/jubatus/server/framework/mixer/push_mixer.cpp
++++ b/jubatus/server/framework/mixer/push_mixer.cpp
+@@ -383,7 +383,7 @@ void push_mixer::mix() {
+         push(her_diff);
+ 
+         // count size
+-        s_pull += her_diff.via.raw.size;
++        s_pull += her_diff.via.bin.size;
+         s_push += my_diff.size();
+       }
+       if (candidates.size() == 0U) {
+@@ -408,11 +408,11 @@ void push_mixer::mix() {
+ }
+ 
+ byte_buffer push_mixer::pull(const msgpack::object& arg_obj) {
+-  if (arg_obj.type != msgpack::type::RAW) {
++  if (arg_obj.type != msgpack::type::BIN) {
+     throw msgpack::rpc::argument_error();
+   }
+   msgpack::unpacked msg;
+-  msgpack::unpack(&msg, arg_obj.via.raw.ptr, arg_obj.via.raw.size);
++  msgpack::unpack(&msg, arg_obj.via.bin.ptr, arg_obj.via.bin.size);
+   msgpack::object arg = msg.get();
+ 
+   scoped_rlock lk_read(model_mutex_);
+@@ -447,12 +447,12 @@ byte_buffer push_mixer::get_pull_argument(int dummy_arg) {
+ }
+ 
+ int push_mixer::push(const msgpack::object& diff_obj) {
+-  if (diff_obj.type != msgpack::type::RAW) {
++  if (diff_obj.type != msgpack::type::BIN) {
+     throw msgpack::rpc::argument_error();
+   }
+ 
+   msgpack::unpacked msg;
+-  msgpack::unpack(&msg, diff_obj.via.raw.ptr, diff_obj.via.raw.size);
++  msgpack::unpack(&msg, diff_obj.via.bin.ptr, diff_obj.via.bin.size);
+   msgpack::object diff = msg.get();
+ 
+   scoped_wlock lk_write(model_mutex_);
+diff --git a/wscript b/wscript
+index 68b6637..5742011 100644
+--- a/wscript
++++ b/wscript
+@@ -77,7 +77,7 @@ def configure(conf):
+   conf.env.ABI_VERSION = ABI_VERSION
+   conf.env.JUBATUS_ENGINES = JUBATUS_ENGINES
+ 
+-  conf.check_cxx(lib = 'msgpack')
++  conf.check_cxx(header_name = 'msgpack.hpp')
+   conf.check_cxx(lib = 'jubatus_mpio')
+   conf.check_cxx(lib = 'jubatus_msgpack-rpc')
+   conf.check_cxx(lib = 'dl')

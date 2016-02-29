@@ -1,0 +1,521 @@
+diff --git a/src/jubatus/msgpack/rpc/client.cc b/src/jubatus/msgpack/rpc/client.cc
+index 3494efb..9c36516 100644
+--- a/src/jubatus/msgpack/rpc/client.cc
++++ b/src/jubatus/msgpack/rpc/client.cc
+@@ -47,7 +47,6 @@ bool MP_UTIL_IMPL(client)::step_timeout(weak_session ws)
+ 	return true;
+ }
+ 
+-
+ client::client(const std::string& host, uint16_t port, loop lo) :
+ 	session(session_impl::create(tcp_builder(), ip_address(host,port), lo))
+ {
+diff --git a/src/jubatus/msgpack/rpc/future.cc b/src/jubatus/msgpack/rpc/future.cc
+index b5811a7..4a60597 100644
+--- a/src/jubatus/msgpack/rpc/future.cc
++++ b/src/jubatus/msgpack/rpc/future.cc
+@@ -95,7 +95,11 @@ void future_impl::set_result(object result, object error, auto_zone z)
+ 	mp::pthread_scoped_lock lk(m_mutex);
+ 	m_result = result;
+ 	m_error = error;
++#if __cplusplus < 201103
+ 	m_zone = z;
++#else
++  m_zone = std::move(z);
++#endif
+ 	m_session.reset();
+ 
+ 	m_cond.broadcast();
+diff --git a/src/jubatus/msgpack/rpc/future.h b/src/jubatus/msgpack/rpc/future.h
+index 91900a5..876652b 100644
+--- a/src/jubatus/msgpack/rpc/future.h
++++ b/src/jubatus/msgpack/rpc/future.h
+@@ -128,7 +128,11 @@ template <typename T>
+ T future::get(auto_zone* z)
+ {
+ 	msgpack::object obj = get_impl();
++#if __cplusplus < 201103
+ 	*z = zone();
++#else
++	*z = std::move(zone());
++#endif
+ 	return obj.as<T>();
+ }
+ 
+@@ -136,7 +140,11 @@ template <> inline
+ void future::get<void>(auto_zone* z)
+ {
+ 	msgpack::object obj = get_impl();
++#if __cplusplus < 201103
+ 	*z = zone();
++#else
++  *z = std::move(zone());
++#endif
+ 	obj.as<msgpack::type::nil>();
+ }
+ 
+diff --git a/src/jubatus/msgpack/rpc/future_impl.h b/src/jubatus/msgpack/rpc/future_impl.h
+index 40d801c..de7518f 100644
+--- a/src/jubatus/msgpack/rpc/future_impl.h
++++ b/src/jubatus/msgpack/rpc/future_impl.h
+@@ -19,6 +19,10 @@
+ #ifndef MSGPACK_RPC_FUTURE_IMPL_H__
+ #define MSGPACK_RPC_FUTURE_IMPL_H__
+ 
++#if __cplusplus >= 201103
++#define MP_MEMORY_STANDARD
++#endif
++
+ #include "future.h"
+ #include "session_impl.h"
+ #include <jubatus/mp/pthread.h>
+diff --git a/src/jubatus/msgpack/rpc/impl_fwd.h b/src/jubatus/msgpack/rpc/impl_fwd.h
+index 9941171..ff2b98f 100644
+--- a/src/jubatus/msgpack/rpc/impl_fwd.h
++++ b/src/jubatus/msgpack/rpc/impl_fwd.h
+@@ -19,6 +19,10 @@
+ #ifndef MSGPACK_RPC_IMPL_H__
+ #define MSGPACK_RPC_IMPL_H__
+ 
++#if __cplusplus >= 201103
++#define MP_MEMORY_STANDARD
++#endif
++
+ #include <jubatus/mp/memory.h>
+ 
+ namespace msgpack {
+diff --git a/src/jubatus/msgpack/rpc/loop.h b/src/jubatus/msgpack/rpc/loop.h
+index 29facdd..4cb14d0 100644
+--- a/src/jubatus/msgpack/rpc/loop.h
++++ b/src/jubatus/msgpack/rpc/loop.h
+@@ -19,6 +19,11 @@
+ #ifndef MSGPACK_RPC_LOOP_H__
+ #define MSGPACK_RPC_LOOP_H__
+ 
++#if __cplusplus >= 201103
++#define MP_FUNCTIONAL_STANDARD
++#define MP_MEMORY_STANDARD
++#endif
++
+ #include <jubatus/mp/wavy.h>
+ #include <jubatus/mp/memory.h>
+ 
+diff --git a/src/jubatus/msgpack/rpc/protocol.h b/src/jubatus/msgpack/rpc/protocol.h
+index 9ebe889..52aea99 100644
+--- a/src/jubatus/msgpack/rpc/protocol.h
++++ b/src/jubatus/msgpack/rpc/protocol.h
+@@ -23,7 +23,6 @@
+ namespace msgpack {
+ namespace rpc {
+ 
+-
+ typedef uint32_t msgid_t;
+ typedef uint32_t method_t;
+ 
+@@ -58,7 +57,11 @@ struct msg_request {
+ 
+ 	msg_request(
+ 			Method method,
++#if __cplusplus < 201103
+ 			typename msgpack::type::tuple_type<Parameter>::transparent_reference param,
++#else
++			const Parameter& param,
++#endif
+ 			msgid_t msgid) :
+ 		type(REQUEST),
+ 		msgid(msgid),
+@@ -80,8 +83,13 @@ struct msg_response {
+ 		msgid(0) { }
+ 
+ 	msg_response(
++#if __cplusplus < 201103
+ 			typename msgpack::type::tuple_type<Result>::transparent_reference result,
+ 			typename msgpack::type::tuple_type<Error >::transparent_reference error,
++#else
++			const Result& result,
++			const Error& error,
++#endif
+ 			msgid_t msgid) :
+ 		type(RESPONSE),
+ 		msgid(msgid),
+@@ -103,7 +111,11 @@ struct msg_notify {
+ 
+ 	msg_notify(
+ 			Method method,
++#if __cplusplus < 201103
+ 			typename msgpack::type::tuple_type<Parameter>::transparent_reference param) :
++#else
++      const Parameter& param) :
++#endif
+ 		type(NOTIFY),
+ 		method(method),
+ 		param(param) { }
+diff --git a/src/jubatus/msgpack/rpc/request_impl.h b/src/jubatus/msgpack/rpc/request_impl.h
+index a75d207..2edbdf9 100644
+--- a/src/jubatus/msgpack/rpc/request_impl.h
++++ b/src/jubatus/msgpack/rpc/request_impl.h
+@@ -30,7 +30,13 @@ public:
+ 	request_impl(shared_message_sendable ms, msgid_t msgid,
+ 			object method, object params, auto_zone z) :
+ 		m_ms(ms), m_msgid(msgid),
+-		m_method(method), m_params(params), m_zone(z) { }
++		m_method(method), m_params(params), m_zone(
++#if __cplusplus < 201103
++    z
++#else
++    std::move(z)
++#endif
++    ) { }
+ 
+ 	~request_impl() { }
+ 
+diff --git a/src/jubatus/msgpack/rpc/server.cc b/src/jubatus/msgpack/rpc/server.cc
+index af41cd8..819cb30 100644
+--- a/src/jubatus/msgpack/rpc/server.cc
++++ b/src/jubatus/msgpack/rpc/server.cc
+@@ -66,7 +66,13 @@ void server_impl::on_request(
+ {
+ 	shared_request sr(new request_impl(
+ 			ms, msgid,
+-			method, params, z));
++			method, params,
++#if __cplusplus < 201103
++      z
++#else
++      std::move(z)
++#endif
++      ));
+ 	m_dp->dispatch(request(sr));
+ }
+ 
+@@ -75,7 +81,13 @@ void server_impl::on_notify(
+ {
+ 	shared_request sr(new request_impl(
+ 			shared_message_sendable(), 0,
+-			method, params, z));
++			method, params,
++#if __cplusplus < 201103
++      z
++#else
++      std::move(z)
++#endif
++      ));
+ 	m_dp->dispatch(request(sr));
+ }
+ 
+diff --git a/src/jubatus/msgpack/rpc/session.cc b/src/jubatus/msgpack/rpc/session.cc
+index eb91c94..30a1bc0 100644
+--- a/src/jubatus/msgpack/rpc/session.cc
++++ b/src/jubatus/msgpack/rpc/session.cc
+@@ -131,7 +131,13 @@ void session_impl::on_response(msgid_t msgid,
+ 		LOG_DEBUG("no entry on request table for msgid=",msgid);
+ 		return;
+ 	}
+-	f->set_result(result, error, z);
++	f->set_result(result, error,
++#if __cplusplus < 201103
++                z
++#else
++                std::move(z)
++#endif
++  );
+ }
+ 
+ void session_impl::on_connection_closed_error()
+diff --git a/src/jubatus/msgpack/rpc/transport/base.h b/src/jubatus/msgpack/rpc/transport/base.h
+index 0857550..063ddcf 100644
+--- a/src/jubatus/msgpack/rpc/transport/base.h
++++ b/src/jubatus/msgpack/rpc/transport/base.h
+@@ -242,7 +242,13 @@ void stream_handler<MixIn>::on_message(object msg, auto_zone z)
+ 			msg_request<object, object> req;
+ 			msg.convert(&req);
+ 			static_cast<MixIn*>(this)->on_request(
+-					req.msgid, req.method, req.param, z);
++					req.msgid, req.method, req.param,
++#if __cplusplus < 201103
++          z
++#else
++          std::move(z)
++#endif
++          );
+ 		}
+ 		break;
+ 
+@@ -250,7 +256,13 @@ void stream_handler<MixIn>::on_message(object msg, auto_zone z)
+ 			msg_response<object, object> res;
+ 			msg.convert(&res);
+ 			static_cast<MixIn*>(this)->on_response(
+-					res.msgid, res.result, res.error, z);
++					res.msgid, res.result, res.error,
++#if __cplusplus < 201103
++          z
++#else
++          std::move(z)
++#endif
++          );
+ 		}
+ 		break;
+ 
+@@ -258,7 +270,13 @@ void stream_handler<MixIn>::on_message(object msg, auto_zone z)
+ 			msg_notify<object, object> req;
+ 			msg.convert(&req);
+ 			static_cast<MixIn*>(this)->on_notify(
+-					req.method, req.param, z);
++					req.method, req.param,
++#if __cplusplus < 201103
++          z
++#else
++          std::move(z)
++#endif
++          );
+ 		}
+ 		break;
+ 
+@@ -279,7 +297,12 @@ void dgram_handler<MixIn>::on_message(object msg, auto_zone z,
+ 			msg_request<object, object> req;
+ 			msg.convert(&req);
+ 			static_cast<MixIn*>(this)->on_request(
+-					req.msgid, req.method, req.param, z,
++					req.msgid, req.method, req.param,
++#if __cplusplus < 201103
++          z,
++#else
++          std::move(z),
++#endif
+ 					addrbuf, addrlen);
+ 		}
+ 		break;
+@@ -288,7 +311,13 @@ void dgram_handler<MixIn>::on_message(object msg, auto_zone z,
+ 			msg_response<object, object> res;
+ 			msg.convert(&res);
+ 			static_cast<MixIn*>(this)->on_response(
+-					res.msgid, res.result, res.error, z);
++					res.msgid, res.result, res.error,
++#if __cplusplus < 201103
++          z
++#else
++          std::move(z)
++#endif
++          );
+ 		}
+ 		break;
+ 
+@@ -296,7 +325,13 @@ void dgram_handler<MixIn>::on_message(object msg, auto_zone z,
+ 			msg_notify<object, object> req;
+ 			msg.convert(&req);
+ 			static_cast<MixIn*>(this)->on_notify(
+-					req.method, req.param, z);
++					req.method, req.param,
++#if __cplusplus < 201103
++          z
++#else
++          std::move(z)
++#endif
++          );
+ 		}
+ 		break;
+ 
+@@ -325,7 +360,13 @@ try {
+ 			//return;
+ 
+ 			// FIXME
+-			stream_handler<MixIn>::on_message(msg, z);
++			stream_handler<MixIn>::on_message(msg,
++#if __cplusplus < 201103
++                                        z
++#else
++                                        std::move(z)
++#endif
++                                        );
+ 			if(m_pac.nonparsed_size() > 0) {
+ 				continue;
+ 			}
+@@ -402,7 +443,13 @@ try {
+ 	result.zone()->push_finalizer(&::free, buffer.data);
+ 	buffer.release();
+ 
+-	dgram_handler<MixIn>::on_message(result.get(), result.zone(), (struct sockaddr*)&addrbuf, addrlen);
++	dgram_handler<MixIn>::on_message(result.get(),
++#if __cplusplus < 201103
++                                   result.zone(),
++#else
++                                   std::move(result.zone()),
++#endif
++                                   (struct sockaddr*)&addrbuf, addrlen);
+ 
+ } catch(msgpack::type_error& ex) {
+ 	LOG_ERROR("connection: type error");
+diff --git a/src/jubatus/msgpack/rpc/transport/tcp.cc b/src/jubatus/msgpack/rpc/transport/tcp.cc
+index d5c4136..46d0aca 100644
+--- a/src/jubatus/msgpack/rpc/transport/tcp.cc
++++ b/src/jubatus/msgpack/rpc/transport/tcp.cc
+@@ -130,7 +130,13 @@ void client_socket::on_response(msgid_t msgid,
+ 	if(!s) {
+ 		throw closed_exception();
+ 	}
+-	s->on_response(msgid, result, error, z);
++	s->on_response(msgid, result, error,
++#if __cplusplus < 201103
++                 z
++#else
++                 std::move(z)
++#endif
++                 );
+ }
+ 
+ void client_socket::on_connection_closed_error() {
+@@ -419,7 +425,13 @@ void server_socket::on_request(
+     throw closed_exception();
+   }
+ 
+-  svr->on_request(get_response_sender(), msgid, method, params, z);
++  svr->on_request(get_response_sender(), msgid, method, params,
++#if __cplusplus < 201103
++                  z
++#else
++                  std::move(z)
++#endif
++                  );
+ 
+   start_server_timeout( m_svr );
+ }
+@@ -431,7 +443,13 @@ void server_socket::on_notify(
+ 	if(!svr) {
+ 		throw closed_exception();
+ 	}
+-	svr->on_notify(method, params, z);
++	svr->on_notify(method, params,
++#if __cplusplus < 201103
++                 z
++#else
++                 std::move(z)
++#endif
++                 );
+ }
+ 
+ void server_socket::on_connection_closed_error() {
+diff --git a/src/jubatus/msgpack/rpc/transport/udp.cc b/src/jubatus/msgpack/rpc/transport/udp.cc
+index 931e082..7435f36 100644
+--- a/src/jubatus/msgpack/rpc/transport/udp.cc
++++ b/src/jubatus/msgpack/rpc/transport/udp.cc
+@@ -93,7 +93,13 @@ void client_socket::on_response(msgid_t msgid,
+ 		throw closed_exception();
+ 	}
+ 	s->on_response(
+-			msgid, result, error, z);
++			msgid, result, error,
++#if __cplusplus < 201103
++      z
++#else
++      std::move(z)
++#endif
++      );
+ }
+ 
+ 
+@@ -206,7 +212,13 @@ void server_socket::on_request(
+ 		throw closed_exception();
+ 	}
+ 	svr->on_request(get_response_sender(addrbuf, addrlen),
+-			msgid, method, params, z);
++			msgid, method, params,
++#if __cplusplus < 201103
++      z
++#else
++      std::move(z)
++#endif
++      );
+ }
+ 
+ void server_socket::on_notify(
+@@ -216,7 +228,13 @@ void server_socket::on_notify(
+ 	if(!svr) {
+ 		throw closed_exception();
+ 	}
+-	svr->on_notify(method, params, z);
++	svr->on_notify(method, params,
++#if __cplusplus < 201103
++                 z
++#else
++                 std::move(z)
++#endif
++                 );
+ }
+ 
+ 
+diff --git a/src/jubatus/msgpack/rpc/transport/unix.cc b/src/jubatus/msgpack/rpc/transport/unix.cc
+index f856af5..23cbaf6 100644
+--- a/src/jubatus/msgpack/rpc/transport/unix.cc
++++ b/src/jubatus/msgpack/rpc/transport/unix.cc
+@@ -99,7 +99,13 @@ void client_socket::on_response(msgid_t msgid,
+ 	if(!s) {
+ 		throw closed_exception();
+ 	}
+-	s->on_response(msgid, result, error, z);
++	s->on_response(msgid, result, error,
++#if __cplusplus < 201103
++                 z
++#else
++                 std::move(z)
++#endif
++                 );
+ }
+ 
+ 
+@@ -212,7 +218,13 @@ void server_socket::on_request(
+ 	if(!svr) {
+ 		throw closed_exception();
+ 	}
+-	svr->on_request(get_response_sender(), msgid, method, params, z);
++	svr->on_request(get_response_sender(), msgid, method, params,
++#if __cplusplus < 201103
++                  z
++#else
++                  std::move(z)
++#endif
++                  );
+ }
+ 
+ void server_socket::on_notify(
+@@ -222,7 +234,13 @@ void server_socket::on_notify(
+ 	if(!svr) {
+ 		throw closed_exception();
+ 	}
+-	svr->on_notify(method, params, z);
++	svr->on_notify(method, params,
++#if __cplusplus < 201103
++                 z
++#else
++                 std::move(z)
++#endif
++                 );
+ }
+ 
+ 
+diff --git a/src/jubatus/msgpack/rpc/types.h b/src/jubatus/msgpack/rpc/types.h
+index 0c74375..f7d4607 100644
+--- a/src/jubatus/msgpack/rpc/types.h
++++ b/src/jubatus/msgpack/rpc/types.h
+@@ -19,6 +19,10 @@
+ #ifndef MSGPACK_RPC_TYPES_H__
+ #define MSGPACK_RPC_TYPES_H__
+ 
++#if __cplusplus >= 201103
++#define MP_MEMORY_STANDARD
++#endif
++
+ #include <msgpack.hpp>
+ #include <jubatus/mp/memory.h>
+ 
+@@ -26,7 +30,11 @@ namespace msgpack {
+ namespace rpc {
+ 
+ 
++#if __cplusplus < 201103
+ typedef std::auto_ptr<zone> auto_zone;
++#else
++typedef std::unique_ptr<zone> auto_zone;
++#endif
+ typedef mp::shared_ptr<zone> shared_zone;
+ 
+ 
