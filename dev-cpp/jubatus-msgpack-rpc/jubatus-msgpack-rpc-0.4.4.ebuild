@@ -8,9 +8,11 @@ LICENSE="Apache-2.0"
 
 SLOT="0"
 KEYWORDS="~amd64"
+IUSE="patch"
 
-DEPEND=">=dev-libs/msgpack-0.1.1.0
-        >=dev-cpp/jubatus-mpio-0.4.0"
+DEPEND="patch? ( >=dev-libs/msgpack-1.1.0 )
+        !patch? ( =dev-libs/msgpack-0.5.9 )
+        >=dev-cpp/jubatus-mpio-0.4.0[patch=]"
 
 src_unpack() {
     unpack "${A}"
@@ -18,13 +20,19 @@ src_unpack() {
 }
 
 src_prepare() {
-    epatch "${FILESDIR}/remove-dep.patch"
-    epatch "${FILESDIR}/msgpack-1.1.patch"
-    epatch "${FILESDIR}/cpp11.patch"
+    if use patch ; then
+        epatch "${FILESDIR}/remove-dep.patch"
+        epatch "${FILESDIR}/msgpack-1.1.patch"
+        epatch "${FILESDIR}/cpp11.patch"
+    fi
 }
 
 src_configure() {
     if [[ -x ${ECONF_SOURCE:-.}/configure ]] ; then
-        CXXFLAGS="$CXXFLAGS -std=c++11" econf
+        if use patch ; then
+            CXXFLAGS="$CXXFLAGS -std=c++11" econf
+        else
+            econf
+        fi
     fi
 }

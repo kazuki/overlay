@@ -12,7 +12,7 @@ LICENSE="Apache-2.0"
 
 SLOT="0"
 KEYWORDS="~amd64"
-
+IUSE="patch"
 DEPEND=">=sys-devel/gcc-4.1"
 
 src_unpack() {
@@ -22,7 +22,7 @@ src_unpack() {
 
 src_configure() {
     if [[ -x ${ECONF_SOURCE:-.}/configure ]] ; then
-        append-cppflags "-std=c++11 -DMP_FUNCTIONAL_STANDARD -DMP_MEMORY_STANDARD"        
+        use patch && append-cppflags "-std=c++11 -DMP_FUNCTIONAL_STANDARD -DMP_MEMORY_STANDARD"
         econf
     fi
 }

@@ -10,12 +10,11 @@ LICENSE="LGPL-2"
 
 SLOT="0"
 KEYWORDS="~amd64"
-IUSE=""
+IUSE="patch"
 
-DEPEND=">=dev-libs/msgpack-1.1.0
-       dev-libs/oniguruma"
-
-append-cppflags "-std=c++11"
+DEPEND="patch? ( >=dev-libs/msgpack-1.1.0 )
+        !patch? ( =dev-libs/msgpack-0.5.9 )
+        dev-libs/oniguruma"
 
 src_unpack() {
     unpack ${A}
@@ -23,5 +22,5 @@ src_unpack() {
 }
 
 src_prepare() {
-    epatch "${FILESDIR}/msgpack-1.1.patch"
+    use patch && epatch "${FILESDIR}/msgpack-1.1.patch"
 }
