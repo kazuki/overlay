@@ -10,17 +10,12 @@ LICENSE="LGPL-2"
 
 SLOT="0"
 KEYWORDS="~amd64"
-IUSE="patch"
+IUSE=""
 
-DEPEND="patch? ( >=dev-libs/msgpack-1.1.0 )
-        !patch? ( =dev-libs/msgpack-0.5.9 )
+DEPEND="=dev-libs/msgpack-0.5.9
         dev-libs/oniguruma"
 
 src_unpack() {
     unpack ${A}
     mv "${WORKDIR}/${P/-core/_core}" "${WORKDIR}/${P}"
-}
-
-src_prepare() {
-    use patch && epatch "${FILESDIR}/msgpack-1.1.patch"
 }
