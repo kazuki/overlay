@@ -36,6 +36,8 @@ src_configure() {
 
 src_compile() {
     ARCH=x86_64 emake || die "emake failed"
+    #emake -j1 bash-completion || die "emake bash-completion failed"
+    #emake -j1 manpages || die "emake manpages failed"
 }
 
 src_install() {
@@ -50,5 +52,6 @@ src_install() {
     systemd_dounit "${S}/dist/init/systemd/rkt-gc.timer"
     systemd_dounit "${S}/dist/init/systemd/rkt-metadata.service"
     systemd_dounit "${S}/dist/init/systemd/rkt-metadata.socket"
-    dobashcomp "${S}/dist/bash_completion/rkt.bash"
+    #dobashcomp "${S}/dist/bash_completion/rkt.bash"
+    #doman "${S}/dist/manpages/*"
 }
