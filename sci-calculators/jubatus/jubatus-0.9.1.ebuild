@@ -13,7 +13,7 @@ KEYWORDS="~amd64"
 IUSE="zookeeper mecab ux"
 
 DEPEND=">=dev-cpp/jubatus-mpio-0.4.1
-        >=sci-calculators/jubatus-core-0.3.0
+        >=sci-calculators/jubatus-core-0.3.1
         >=dev-cpp/jubatus-msgpack-rpc-0.4.1
         >=dev-libs/log4cxx-0.10.0
         zookeeper? ( >=sys-cluster/apache-zookeeper-3.4.0 )
