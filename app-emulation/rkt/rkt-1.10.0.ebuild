@@ -41,13 +41,16 @@ src_compile() {
 }
 
 src_install() {
-    BUILD_DIR="${S}/build-rkt-${PV}/bin"
+    BUILD_DIR="${S}/build-rkt-${PV}/target/bin"
     dobin "${BUILD_DIR}"/rkt
-    dobin "${BUILD_DIR}"/actool
     dobin "${BUILD_DIR}"/stage1-coreos.aci
     dobin "${BUILD_DIR}"/stage1-kvm.aci
     dobin "${BUILD_DIR}"/stage1-fly.aci
 
+    exeinto /usr/share/rkt
+    doexe "${S}/dist/scripts/setup-data-dir.sh"
+
+    systemd_dounit "${S}/dist/init/systemd/rkt-api.service"
     systemd_dounit "${S}/dist/init/systemd/rkt-gc.service"
     systemd_dounit "${S}/dist/init/systemd/rkt-gc.timer"
     systemd_dounit "${S}/dist/init/systemd/rkt-metadata.service"
