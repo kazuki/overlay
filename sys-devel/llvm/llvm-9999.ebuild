@@ -51,13 +51,18 @@ DEPEND="${RDEPEND}
 	libffi? ( virtual/pkgconfig )
 	ocaml? ( dev-ml/findlib
 		test? ( dev-ml/ounit ) )
+	test? ( $(python_gen_any_dep 'dev-python/lit[${PYTHON_USEDEP}]') )
 	!!<dev-python/configparser-3.3.0.2
 	${PYTHON_DEPS}"
 
 REQUIRED_USE="${PYTHON_REQUIRED_USE}
 	|| ( || ( ${ALL_LLVM_TARGETS[*]} )
-		multitarget? ( ${ALL_LLVM_TARGETS[*]} )
-	)"
+		multitarget? ( ${ALL_LLVM_TARGETS[*]} ) )"
+
+python_check_deps() {
+	! use test \
+		|| has_version "dev-python/lit[${PYTHON_USEDEP}]"
+}
 
 pkg_pretend() {
 	# in megs
@@ -96,9 +101,6 @@ pkg_setup() {
 src_prepare() {
 	# Python is needed to run tests using lit
 	python_setup
-
-	# Fix libdir for ocaml bindings install, bug #559134
-	eapply "${FILESDIR}"/9999/0001-cmake-Install-OCaml-modules-into-correct-package-loc.patch
 
 	# Prevent race conditions with parallel Sphinx runs
 	# https://llvm.org/bugs/show_bug.cgi?id=23781
@@ -171,6 +173,10 @@ multilib_src_configure() {
 			-DGO_EXECUTABLE=GO_EXECUTABLE-NOTFOUND
 		)
 #	fi
+
+	use test && mycmakeargs+=(
+		-DLIT_COMMAND="${EPREFIX}/usr/bin/lit"
+	)
 
 	if multilib_is_native_abi; then
 		mycmakeargs+=(
