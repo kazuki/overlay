@@ -10,19 +10,22 @@ LICENSE="GPL-2"
 
 SLOT="0"
 KEYWORDS="~amd64"
-IUSE="zookeeper mecab ux"
+IUSE="zookeeper mecab ux opencv"
 
 DEPEND=">=dev-cpp/jubatus-mpio-0.4.1
-        >=sci-calculators/jubatus-core-0.3.1
+        =sci-calculators/jubatus-core-1.0.0
         >=dev-cpp/jubatus-msgpack-rpc-0.4.1
         >=dev-libs/log4cxx-0.10.0
         zookeeper? ( >=sys-cluster/apache-zookeeper-3.4.0 )
         mecab? ( >=app-text/mecab-0.99 )
-        ux? ( dev-libs/ux )"
+        ux? ( dev-libs/ux )
+        opencv? ( >=media-libs/opencv-2.0.0 )"
 
 src_configure() {
     waf-utils_src_configure \
         $(use zookeeper && printf -- "--enable-zookeeper") \
         $(use mecab && printf -- "--enable-mecab") \
-        $(use ux && printf -- "--enable-ux") || die "configure failed"
+        $(use ux && printf -- "--enable-ux") \
+        $(use opencv && printf -- "--enable-opencv") \
+        || die "configure failed"
 }
