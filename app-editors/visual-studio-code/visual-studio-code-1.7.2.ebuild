@@ -9,7 +9,7 @@ inherit eutils
 DESCRIPTION="Multiplatform Visual Studio Code from Microsoft"
 HOMEPAGE="https://code.visualstudio.com"
 SRC_URI="
-	amd64? ( https://az764295.vo.msecnd.net/stable/02611b40b24c9df2726ad8b33f5ef5f67ac30b44/code-stable-code_1.7.1-1478180561_amd64.tar.gz -> ${P}.tar.gz )
+	amd64? ( https://az764295.vo.msecnd.net/stable/7ba55c5860b152d999dda59393ca3ebeb1b5c85f/code-stable-code_1.7.2-1479766213_amd64.tar.gz -> ${P}.tar.gz )
 "
 
 LICENSE="Microsoft"
