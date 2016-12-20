@@ -20,13 +20,22 @@ EGIT_REPO_URI="http://llvm.org/git/llvm.git
 
 # Keep in sync with CMakeLists.txt
 ALL_LLVM_TARGETS=( AArch64 AMDGPU ARM BPF Hexagon Lanai Mips MSP430
-	NVPTX PowerPC Sparc SystemZ X86 XCore )
+	NVPTX PowerPC RISCV Sparc SystemZ X86 XCore )
 ALL_LLVM_TARGETS=( "${ALL_LLVM_TARGETS[@]/#/llvm_targets_}" )
 
-LICENSE="UoI-NCSA"
+# Additional licenses:
+# 1. OpenBSD regex: Henry Spencer's license ('rc' in Gentoo) + BSD.
+# 2. ARM backend: LLVM Software Grant by ARM.
+# 3. MD5 code: public-domain.
+# 4. Tests (not installed):
+#  a. gtest: BSD.
+#  b. YAML tests: MIT.
+
+LICENSE="UoI-NCSA rc BSD public-domain
+	llvm_targets_ARM? ( LLVM-Grant )"
 SLOT="0/${PV%.*}"
 KEYWORDS=""
-IUSE="debug +doc gold libedit +libffi multitarget ncurses ocaml test
+IUSE="debug +doc gold libedit +libffi multitarget ncurses test
 	elibc_musl kernel_Darwin ${ALL_LLVM_TARGETS[*]} llvm_targets_WebAssembly"
 
 RDEPEND="
@@ -34,10 +43,7 @@ RDEPEND="
 	gold? ( >=sys-devel/binutils-2.22:*[cxx] )
 	libedit? ( dev-libs/libedit:0=[${MULTILIB_USEDEP}] )
 	libffi? ( >=virtual/libffi-3.0.13-r1:0=[${MULTILIB_USEDEP}] )
-	ncurses? ( >=sys-libs/ncurses-5.9-r3:0=[${MULTILIB_USEDEP}] )
-	ocaml? (
-		>=dev-lang/ocaml-4.00.0:0=
-		dev-ml/ocaml-ctypes:= )"
+	ncurses? ( >=sys-libs/ncurses-5.9-r3:0=[${MULTILIB_USEDEP}] )"
 # configparser-3.2 breaks the build (3.3 or none at all are fine)
 DEPEND="${RDEPEND}
 	dev-lang/perl
@@ -49,22 +55,20 @@ DEPEND="${RDEPEND}
 	doc? ( dev-python/sphinx )
 	gold? ( sys-libs/binutils-libs )
 	libffi? ( virtual/pkgconfig )
-	ocaml? ( dev-ml/findlib
-		test? ( dev-ml/ounit ) )
 	test? ( $(python_gen_any_dep 'dev-python/lit[${PYTHON_USEDEP}]') )
 	!!<dev-python/configparser-3.3.0.2
 	${PYTHON_DEPS}"
 
 REQUIRED_USE="${PYTHON_REQUIRED_USE}
 	|| ( || ( ${ALL_LLVM_TARGETS[*]} )
-		multitarget? ( ${ALL_LLVM_TARGETS[*]} ) )"
+	        multitarget? ( ${ALL_LLVM_TARGETS[*]} ) )"
 
 python_check_deps() {
 	! use test \
 		|| has_version "dev-python/lit[${PYTHON_USEDEP}]"
 }
 
-pkg_pretend() {
+check_space() {
 	# in megs
 	# !debug !multitarget -O2       400
 	# !debug  multitarget -O2       550
@@ -94,17 +98,17 @@ pkg_pretend() {
 	check-reqs_pkg_pretend
 }
 
+pkg_pretend() {
+	check_space
+}
+
 pkg_setup() {
-	pkg_pretend
+	check_space
 }
 
 src_prepare() {
 	# Python is needed to run tests using lit
 	python_setup
-
-	# Prevent race conditions with parallel Sphinx runs
-	# https://llvm.org/bugs/show_bug.cgi?id=23781
-	eapply "${FILESDIR}"/9999/0004-cmake-Add-an-ordering-dep-between-HTML-man-Sphinx-ta.patch
 
 	# Allow custom cmake build types (like 'Gentoo')
 	eapply "${FILESDIR}"/9999/0006-cmake-Remove-the-CMAKE_BUILD_TYPE-assertion.patch
@@ -112,10 +116,6 @@ src_prepare() {
 	# Fix llvm-config for shared linking and sane flags
 	# https://bugs.gentoo.org/show_bug.cgi?id=565358
 	eapply "${FILESDIR}"/9999/0007-llvm-config-Clean-up-exported-values-update-for-shar.patch
-
-	# Restore SOVERSIONs for shared libraries
-	# https://bugs.gentoo.org/show_bug.cgi?id=578392
-	eapply "${FILESDIR}"/9999/0008-cmake-Restore-SOVERSIONs-on-shared-libraries.patch
 
 	# support building llvm against musl-libc
 	use elibc_musl && eapply "${FILESDIR}"/9999/musl-fixes.patch
@@ -133,8 +133,8 @@ src_prepare() {
 multilib_src_configure() {
 	local ffi_cflags ffi_ldflags
 	if use libffi; then
-		ffi_cflags=$(pkg-config --cflags-only-I libffi)
-		ffi_ldflags=$(pkg-config --libs-only-L libffi)
+		ffi_cflags=$($(tc-getPKG_CONFIG) --cflags-only-I libffi)
+		ffi_ldflags=$($(tc-getPKG_CONFIG) --libs-only-L libffi)
 	fi
 
 	local libdir=$(get_libdir)
@@ -146,6 +146,7 @@ multilib_src_configure() {
 		-DLLVM_BUILD_TESTS=$(usex test)
 
 		-DLLVM_ENABLE_FFI=$(usex libffi)
+		-DLLVM_ENABLE_LIBEDIT=$(usex libedit)
 		-DLLVM_ENABLE_TERMINFO=$(usex ncurses)
 		-DLLVM_ENABLE_ASSERTIONS=$(usex debug)
 		-DLLVM_ENABLE_EH=ON
@@ -158,14 +159,10 @@ multilib_src_configure() {
 		-DFFI_INCLUDE_DIR="${ffi_cflags#-I}"
 		-DFFI_LIBRARY_DIR="${ffi_ldflags#-L}"
 
-		-DHAVE_HISTEDIT_H=$(usex libedit)
+		# disable OCaml bindings (now in dev-ml/llvm-ocaml)
+		-DOCAMLFIND=NO
 	)
 
-	if ! multilib_is_native_abi || ! use ocaml; then
-		mycmakeargs+=(
-			-DOCAMLFIND=NO
-		)
-	fi
 #	Note: go bindings have no CMake rules at the moment
 #	but let's kill the check in case they are introduced
 #	if ! multilib_is_native_abi || ! use go; then
@@ -181,11 +178,6 @@ multilib_src_configure() {
 	if multilib_is_native_abi; then
 		mycmakeargs+=(
 			-DLLVM_BUILD_DOCS=$(usex doc)
-			# note: this is used only when OCaml is enabled, so we can
-			# set it to 'yes' even without OCaml around
-			# note 2: disable for now since it installs
-			# to /usr/docs/ocaml/html/html which is kinda wrong
-			# bother to fix it when somebody starts to care
 			-DLLVM_ENABLE_OCAMLDOC=OFF
 			-DLLVM_ENABLE_SPHINX=$(usex doc)
 			-DLLVM_ENABLE_DOXYGEN=OFF
