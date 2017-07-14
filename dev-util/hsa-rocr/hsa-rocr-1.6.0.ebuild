@@ -20,3 +20,10 @@ src_unpack() {
     unpack ${A}
     mv ROCR-Runtime-roc-${PV} ${P}
 }
+
+src_install() {
+    cmake-utils_src_install
+
+    dodir /etc/ld.so.conf.d/
+    echo /usr/hsa/lib >> ${ED}/etc/ld.so.conf.d/10${PN}.conf || die
+}
