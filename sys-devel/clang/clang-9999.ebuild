@@ -12,9 +12,9 @@ inherit cmake-utils flag-o-matic git-r3 llvm multilib-minimal \
 	python-single-r1 toolchain-funcs pax-utils versionator
 
 DESCRIPTION="C language family frontend for LLVM"
-HOMEPAGE="http://llvm.org/"
+HOMEPAGE="https://llvm.org/"
 SRC_URI=""
-EGIT_REPO_URI="http://llvm.org/git/clang.git
+EGIT_REPO_URI="https://git.llvm.org/git/clang.git
 	https://github.com/llvm-mirror/clang.git"
 
 # Keep in sync with sys-devel/llvm
@@ -24,11 +24,11 @@ ALL_LLVM_TARGETS=( "${ALL_LLVM_TARGETS[@]/#/llvm_targets_}" )
 LLVM_TARGET_USEDEPS=${ALL_LLVM_TARGETS[@]/%/?}
 
 LICENSE="UoI-NCSA"
-SLOT="5"
+SLOT="6"
 KEYWORDS=""
 IUSE="debug default-compiler-rt default-libcxx +doc multitarget
 	+static-analyzer test xml z3 elibc_musl kernel_FreeBSD
-	${ALL_LLVM_TARGETS[*]}"
+	${ALL_LLVM_TARGETS[*]} llvm_targets_WebAssembly"
 
 RDEPEND="
 	~sys-devel/llvm-${PV}:${SLOT}=[debug=,${LLVM_TARGET_USEDEPS// /,},${MULTILIB_USEDEP}]
@@ -84,19 +84,19 @@ src_unpack() {
 	mkdir -p x/y || die
 	cd x/y || die
 
-	git-r3_fetch "http://llvm.org/git/clang-tools-extra.git
+	git-r3_fetch "https://git.llvm.org/git/clang-tools-extra.git
 		https://github.com/llvm-mirror/clang-tools-extra.git"
 	if use test; then
 		# needed for patched gtest
-		git-r3_fetch "http://llvm.org/git/llvm.git
+		git-r3_fetch "https://git.llvm.org/git/llvm.git
 			https://github.com/llvm-mirror/llvm.git"
 	fi
 	git-r3_fetch
 
-	git-r3_checkout http://llvm.org/git/clang-tools-extra.git \
+	git-r3_checkout https://llvm.org/git/clang-tools-extra.git \
 		"${S}"/tools/extra
 	if use test; then
-		git-r3_checkout http://llvm.org/git/llvm.git \
+		git-r3_checkout https://llvm.org/git/llvm.git \
 			"${WORKDIR}"/llvm
 	fi
 	git-r3_checkout "${EGIT_REPO_URI}" "${S}"
@@ -175,6 +175,12 @@ multilib_src_configure() {
 		mycmakeargs+=(
 			-DCMAKE_CROSSCOMPILING=ON
 			-DCLANG_TABLEGEN=/usr/bin/clang-tblgen
+		)
+	fi
+
+	if use llvm_targets_WebAssembly; then
+		mycmakeargs+=(
+			-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly
 		)
 	fi
 
