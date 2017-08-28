@@ -19,5 +19,4 @@ src_unpack() {
     unpack ${A}
     mv "${WORKDIR}/${P/-core/_core}" "${WORKDIR}/${P}"
     cd "${WORKDIR}/${P}"
-    epatch "${FILESDIR}/fmv.patch"
 }

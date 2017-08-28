@@ -1,0 +1,23 @@
+diff --git a/plugin/src/fv_converter/python_bridge/wscript b/plugin/src/fv_converter/python_bridge/wscript
+index bbc0f6f9..250f47c0 100644
+--- a/plugin/src/fv_converter/python_bridge/wscript
++++ b/plugin/src/fv_converter/python_bridge/wscript
+@@ -15,17 +15,7 @@ def options(opt):
+ def configure(conf):
+   if Options.options.enable_python_bridge or Options.options.enable_python3_bridge:
+     conf.check_cxx(lib='dl', define_name='HAVE_DL', errmsg = 'not found', mandatory = False)
+-
+-    python_found = False
+-    if not Options.options.enable_python3_bridge:
+-      python_found = conf.check_cfg(package = 'python',
+-                   atleast_version = '2.6',
+-                   args = '--cflags --libs',
+-                   uselib_store = 'PYTHON',
+-                   define_name = 'HAVE_PYTHON',
+-                   mandatory = False)
+-    if not python_found:
+-      conf.check_cfg(package = 'python3',
++    conf.check_cfg(package = 'python-DUMMY',
+                    args = '--cflags --libs',
+                    uselib_store = 'PYTHON',
+                    define_name = 'HAVE_PYTHON')
