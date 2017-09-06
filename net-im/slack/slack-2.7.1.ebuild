@@ -20,8 +20,7 @@ QA_PREBUILT="usr/lib/slack/*"
 DEPEND=""
 RDEPEND="
 	>=gnome-base/gconf-3.2.6-r4
-	>=gnome-base/libgnome-keyring-3.12.0
-	>=x11-libs/libXScrnSaver-1.2.2-r1
+	>=net-print/cups-2.1.4
 "
 
 S=${WORKDIR}
@@ -37,5 +36,4 @@ src_prepare() {
 
 src_install() {
 	cp -a . "${D}" || die
-	make_desktop_entry ${PN} "Slack" /usr/share/pixmaps/${PN}.png "Network"
 }
