@@ -6,7 +6,7 @@ inherit cmake-utils
 
 DESCRIPTION="ROCm Platform Runtime: ROCr a HPC market enhanced HSA based runtime"
 HOMEPAGE="https://github.com/RadeonOpenCompute/ROCR-Runtime"
-EXT_ROCR_NAME="hsa-ext-rocr-dev_1.1.6-33-g9f17990_amd64.deb"
+EXT_ROCR_NAME="hsa-ext-rocr-dev_1.1.6-85-g466237c_amd64.deb"
 SRC_URI="
     https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/roc-${PV}.tar.gz -> ${P}.tar.gz
     ext-finalizer? ( http://repo.radeon.com/rocm/apt/debian/pool/main/h/hsa-ext-rocr-dev/${EXT_ROCR_NAME} )
@@ -19,7 +19,7 @@ S="${WORKDIR}/${P}/src"
 
 IUSE="+ext-finalizer"
 
-DEPEND="~dev-util/hsakmt-roct-${PV}"
+DEPEND="dev-util/hsakmt-roct"
 RDEPEND="${DEPEND}"
 
 src_unpack() {

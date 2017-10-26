@@ -15,6 +15,8 @@ KEYWORDS="~amd64"
 src_unpack() {
     unpack ${A}
     mv ROCT-Thunk-Interface-roc-${PV} ${P}
+    cd "${S}"
+    epatch "${FILESDIR}/fix-build-error.patch"
 }
 
 src_install() {
