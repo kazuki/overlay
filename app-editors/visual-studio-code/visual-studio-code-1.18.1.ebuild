@@ -14,6 +14,7 @@ SRC_URI="
 	amd64? ( ${BASE_URI}/linux-x64/stable -> ${P}-amd64.tar.gz )
 	"
 RESTRICT="mirror strip"
+S="${WORKDIR}/VSCode-linux"
 
 LICENSE="Microsoft"
 SLOT="0"
@@ -33,10 +34,10 @@ RDEPEND="
 	x11-libs/libnotify
 "
 
-ARCH=$(uname -m)
-
-[[ ${ARCH} == "x86_64" ]] && S="${WORKDIR}/VSCode-linux-x64"
-[[ ${ARCH} != "x86_64" ]] && S="${WORKDIR}/VSCode-linux-ia32"
+src_unpack(){
+	unpack "${A}"
+	mv "${WORKDIR}/VSCode-linux-$(usex amd64 x64 ia32)" "${WORKDIR}/VSCode-linux"
+}
 
 src_install(){
 	pax-mark m code
