@@ -6,7 +6,7 @@ inherit cmake-utils
 
 DESCRIPTION="ROCm Platform Runtime: ROCr a HPC market enhanced HSA based runtime"
 HOMEPAGE="https://github.com/RadeonOpenCompute/ROCR-Runtime"
-EXT_ROCR_NAME="hsa-ext-rocr-dev_1.1.6-85-g466237c_amd64.deb"
+EXT_ROCR_NAME="hsa-ext-rocr-dev_1.1.7-12-gf0de514_amd64.deb"
 SRC_URI="
     https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/roc-${PV}.tar.gz -> ${P}.tar.gz
     ext-finalizer? ( http://repo.radeon.com/rocm/apt/debian/pool/main/h/hsa-ext-rocr-dev/${EXT_ROCR_NAME} )
@@ -28,20 +28,19 @@ src_unpack() {
     if use ext-finalizer; then
         tar xf data.tar.gz
     fi
+    cd "${S}"
+    epatch "${FILESDIR}/install.patch"
 }
 
 src_install() {
     cmake-utils_src_install
 
-    dodir /etc/ld.so.conf.d/
-    echo /usr/hsa/lib >> ${ED}/etc/ld.so.conf.d/10${PN}.conf || die
-
     if use ext-finalizer; then
         cd ${WORKDIR}/opt/rocm/hsa/bin
-        into /usr/hsa || die
+        into /usr || die
         dobin amdhsacod || die
         dobin amdhsafin || die
         cd ${WORKDIR}/opt/rocm/hsa/lib
-        cp -a libhsa-ext-finalize64.so* ${ED}/usr/hsa/lib || die
+        cp -a libhsa-ext-finalize64.so* ${ED}/usr/lib64 || die
     fi
 }

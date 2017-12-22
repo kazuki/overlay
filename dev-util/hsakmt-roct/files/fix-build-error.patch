@@ -1,13 +1,26 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index bc8ce505bb3a..c95fd080aec5 100644
+index 39ef33e65316..0419cbfd069e 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -52,7 +52,7 @@ set ( BUILD_VERSION_STRING "${BUILD_VERSION_MAJOR}.${BUILD_VERSION_MINOR}.${BUIL
- set ( CMAKE_VERBOSE_MAKEFILE on )
+@@ -32,6 +32,8 @@ set ( HSAKMT_TARGET "${HSAKMT}" )
  
- ## Compiler flags
--set ( CMAKE_C_FLAGS "-fPIC -W -Wall -Wextra -Werror -Wno-unused-parameter -Wformat-security -Wswitch-default -Wundef -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wlogical-op -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls -Wunreachable-code -std=gnu99 -fvisibility=hidden -O2" )
-+set ( CMAKE_C_FLAGS "-fPIC -W -Wall -Wextra -Werror -Wno-unused-parameter -Wformat-security -Wswitch-default -Wundef -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls -Wunreachable-code -std=gnu99 -fvisibility=hidden -O2" )
+ project ( ${HSAKMT_TARGET} )
  
- set ( HSAKMT_LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/libhsakmt.ver" )
++list ( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules" )
++
+ ## Include common cmake modules
+ include ( utils )
  
+@@ -126,7 +128,11 @@ add_custom_target ( install-dev DEPENDS build-dev COMMAND make install WORKING_D
+ add_custom_target ( package-dev DEPENDS build-dev  COMMAND make package WORKING_DIRECTORY ${DEV_BUILD_DIR} )
+ 
+ ## Add the install directives for the runtime library.
+-install ( TARGETS ${HSAKMT_TARGET} LIBRARY DESTINATION libhsakmt/lib COMPONENT ${HSAKMT_COMPONENT} )
++install ( TARGETS ${HSAKMT_TARGET} LIBRARY DESTINATION lib64 COMPONENT ${HSAKMT_COMPONENT} )
++install ( FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md DESTINATION include/libhsakmt )
++install ( FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/hsakmt.h DESTINATION include/libhsakmt )
++install ( FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/hsakmttypes.h DESTINATION include/libhsakmt )
++install ( FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/linux/kfd_ioctl.h DESTINATION include/libhsakmt/linux )
+ 
+ ## Add the packaging directives for the runtime library.
+ set ( CPACK_PACKAGE_NAME ${HSAKMT_PACKAGE} )
