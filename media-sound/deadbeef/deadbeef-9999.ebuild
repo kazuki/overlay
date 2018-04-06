@@ -145,11 +145,6 @@ src_prepare() {
 		rm -v "${S}/translation/help.ru.txt" || die
 	fi
 
-	if ! use_if_iuse linguas_pt_BR && ! use_if_iuse linguas_ru ; then
-		eapply "${FILESDIR}/${PN}-remove-pt_br-and-ru-help-translation.patch"
-		rm -v "${S}/translation/help.pt_BR.txt" "${S}/translation/help.ru.txt" || die
-	fi
-
 	if use midi ; then
 		# set default gentoo path
 		sed -e 's;/etc/timidity++/timidity-freepats.cfg;/usr/share/timidity/freepats/timidity.cfg;g' \
