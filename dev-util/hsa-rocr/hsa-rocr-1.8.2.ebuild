@@ -6,11 +6,12 @@ inherit cmake-utils
 
 DESCRIPTION="ROCm Platform Runtime: ROCr a HPC market enhanced HSA based runtime"
 HOMEPAGE="https://github.com/RadeonOpenCompute/ROCR-Runtime"
-EXT_ROCR_NAME="hsa-ext-rocr-dev_1.1.7-12-gf0de514_amd64.deb"
+EXT_ROCR_NAME="hsa-ext-rocr-dev_1.1.8-15-ge851b7a_amd64.deb"
 SRC_URI="
-    https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/roc-${PV}.tar.gz -> ${P}.tar.gz
+    https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/bfc4b9e98cb5e48d9f96287371d518cb444968ba.zip -> ${P}.zip
     ext-finalizer? ( http://repo.radeon.com/rocm/apt/debian/pool/main/h/hsa-ext-rocr-dev/${EXT_ROCR_NAME} )
 "
+# https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/roc-${PV}.tar.gz -> ${P}.tar.gz
 
 LICENSE="NCSA"
 SLOT="0"
@@ -24,7 +25,8 @@ RDEPEND="${DEPEND}"
 
 src_unpack() {
     unpack ${A}
-    mv ROCR-Runtime-roc-${PV} ${P}
+    mv ROCR-Runtime-bfc4b9e98cb5e48d9f96287371d518cb444968ba ${P}
+    # mv ROCR-Runtime-roc-${PV} ${P}
     if use ext-finalizer; then
         tar xf data.tar.gz
     fi

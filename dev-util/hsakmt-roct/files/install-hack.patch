@@ -2,15 +2,6 @@ diff --git a/CMakeLists.txt b/CMakeLists.txt
 index 39ef33e65316..0419cbfd069e 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -32,6 +32,8 @@ set ( HSAKMT_TARGET "${HSAKMT}" )
- 
- project ( ${HSAKMT_TARGET} )
- 
-+list ( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules" )
-+
- ## Include common cmake modules
- include ( utils )
- 
 @@ -126,7 +128,11 @@ add_custom_target ( install-dev DEPENDS build-dev COMMAND make install WORKING_D
  add_custom_target ( package-dev DEPENDS build-dev  COMMAND make package WORKING_DIRECTORY ${DEV_BUILD_DIR} )
  
