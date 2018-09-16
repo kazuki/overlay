@@ -6,12 +6,11 @@ inherit cmake-utils
 
 DESCRIPTION="ROCm Platform Runtime: ROCr a HPC market enhanced HSA based runtime"
 HOMEPAGE="https://github.com/RadeonOpenCompute/ROCR-Runtime"
-EXT_ROCR_NAME="hsa-ext-rocr-dev_1.1.8-15-ge851b7a_amd64.deb"
+EXT_ROCR_NAME="hsa-ext-rocr-dev_1.1.9-8-g51c00c2_amd64.deb"
 SRC_URI="
-    https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/bfc4b9e98cb5e48d9f96287371d518cb444968ba.zip -> ${P}.zip
+    https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/aa0e4afebfe0dee49054034578a3b4fb5ebc0a07.tar.gz -> ${P}.tar.gz
     ext-finalizer? ( http://repo.radeon.com/rocm/apt/debian/pool/main/h/hsa-ext-rocr-dev/${EXT_ROCR_NAME} )
 "
-# https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/roc-${PV}.tar.gz -> ${P}.tar.gz
 
 LICENSE="NCSA"
 SLOT="0"
@@ -25,24 +24,21 @@ RDEPEND="${DEPEND}"
 
 src_unpack() {
     unpack ${A}
-    mv ROCR-Runtime-bfc4b9e98cb5e48d9f96287371d518cb444968ba ${P}
+    mv ROCR-Runtime-aa0e4afebfe0dee49054034578a3b4fb5ebc0a07 ${P}
     # mv ROCR-Runtime-roc-${PV} ${P}
     if use ext-finalizer; then
         tar xf data.tar.gz
     fi
     cd "${S}"
     epatch "${FILESDIR}/install.patch"
+    epatch "${FILESDIR}/fix-compile-error.patch"
 }
 
 src_install() {
     cmake-utils_src_install
 
     if use ext-finalizer; then
-        cd ${WORKDIR}/opt/rocm/hsa/bin
-        into /usr || die
-        dobin amdhsacod || die
-        dobin amdhsafin || die
         cd ${WORKDIR}/opt/rocm/hsa/lib
-        cp -a libhsa-ext-finalize64.so* ${ED}/usr/lib64 || die
+        cp -a libhsa-* ${ED}/usr/lib64 || die
     fi
 }
