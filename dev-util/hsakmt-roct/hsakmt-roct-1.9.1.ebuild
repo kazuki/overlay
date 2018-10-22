@@ -11,6 +11,7 @@ SRC_URI="https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/archive/roc-$
 LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64"
+DEPEND="sys-process/numactl"
 
 src_unpack() {
     unpack ${A}
