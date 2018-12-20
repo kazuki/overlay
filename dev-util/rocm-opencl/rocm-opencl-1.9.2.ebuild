@@ -16,6 +16,7 @@ DEPEND="
     dev-lang/ocaml
     dev-ml/findlib
     sci-mathematics/z3
+    dev-cpp/gtest
 "
 RDEPEND="
     app-eselect/eselect-opencl
