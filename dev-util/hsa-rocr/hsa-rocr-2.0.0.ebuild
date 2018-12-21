@@ -6,10 +6,10 @@ inherit cmake-utils
 
 DESCRIPTION="ROCm Platform Runtime: ROCr a HPC market enhanced HSA based runtime"
 HOMEPAGE="https://github.com/RadeonOpenCompute/ROCR-Runtime"
-EXT_ROCR_NAME="hsa-ext-rocr-dev_1.1.9-15-g848be2f_amd64.deb"
+EXT_ROCR_NAME="hsa-ext-rocr-dev_1.1.9-45-ge88639f_amd64.deb"
 SRC_URI="
     https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/roc-${PV}.tar.gz -> ${P}.tar.gz
-    ext-finalizer? ( http://repo.radeon.com/rocm/apt/debian/pool/main/h/hsa-ext-rocr-dev/${EXT_ROCR_NAME} )
+    hsa-ext? ( http://repo.radeon.com/rocm/apt/debian/pool/main/h/hsa-ext-rocr-dev/${EXT_ROCR_NAME} )
 "
 
 LICENSE="NCSA"
@@ -17,7 +17,7 @@ SLOT="0"
 KEYWORDS="~amd64"
 S="${WORKDIR}/${P}/src"
 
-IUSE="+ext-finalizer"
+IUSE="+hsa-ext"
 
 DEPEND="dev-util/hsakmt-roct"
 RDEPEND="${DEPEND}"
@@ -25,7 +25,7 @@ RDEPEND="${DEPEND}"
 src_unpack() {
     unpack ${A}
     mv ROCR-Runtime-roc-${PV} ${P}
-    if use ext-finalizer; then
+    if use hsa-ext; then
         tar xf data.tar.gz
     fi
     cd "${S}"
@@ -36,7 +36,7 @@ src_unpack() {
 src_install() {
     cmake-utils_src_install
 
-    if use ext-finalizer; then
+    if use hsa-ext; then
         cd ${WORKDIR}/opt/rocm/hsa/lib
         cp -a libhsa-* ${ED}/usr/lib64 || die
     fi

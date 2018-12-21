@@ -7,7 +7,7 @@ LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64"
 IUSE=""
-GIT_REVISION="9e980d419d0e7fcfff82b071d14acd820be7ea5c"
+GIT_REVISION="184c0efb3ad33c7326850fd8d790a3822e62a302"
 
 DEPEND="
     dev-lang/python:2.7
@@ -37,7 +37,7 @@ src_unpack() {
 src_configure() {
     mkdir -p "${BUILD_DIR}" || die "Failed to create build dir"
     cd "${BUILD_DIR}"
-    cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} "${CMAKE_USE_DIR}"
+    cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCLANG_ENABLE_STATIC_ANALYZER=On "${CMAKE_USE_DIR}"
 }
 
 src_compile() {
