@@ -7,7 +7,7 @@ LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64"
 IUSE=""
-GIT_REVISION="ef03ad02d03366ec4e42ba9e11bdb05c9f38c746"
+GIT_REVISION="3edb7a97944c38676c2b634a63a1cc69ce5caaff"
 
 DEPEND="
     dev-lang/python:2.7
