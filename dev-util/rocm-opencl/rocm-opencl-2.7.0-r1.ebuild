@@ -7,7 +7,7 @@ LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64"
 IUSE=""
-GIT_REVISION="c26c6f1d8d526109ad368e2712c1d21a705bb44f"
+GIT_REVISION="a7211c3ce35e0d6e54202bda98edfa2ec4fb6bc6"
 
 DEPEND="
     dev-lang/python:2.7
@@ -17,6 +17,8 @@ DEPEND="
     dev-ml/findlib
     sci-mathematics/z3
     dev-cpp/gtest
+    =dev-util/hsakmt-roct-${PV}-r1
+    =dev-util/hsa-rocr-${PV}
 "
 RDEPEND="
     app-eselect/eselect-opencl
