@@ -7,7 +7,7 @@ LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64"
 IUSE=""
-GIT_REVISION="a7211c3ce35e0d6e54202bda98edfa2ec4fb6bc6"
+GIT_REVISION="887dc1642b9190424632c2e604555472722c957d"
 
 DEPEND="
     dev-lang/python:2.7
@@ -17,7 +17,7 @@ DEPEND="
     dev-ml/findlib
     sci-mathematics/z3
     dev-cpp/gtest
-    =dev-util/hsakmt-roct-${PV}-r1
+    =dev-util/hsakmt-roct-${PV}
     =dev-util/hsa-rocr-${PV}
 "
 RDEPEND="
@@ -49,7 +49,7 @@ src_compile() {
 src_install() {
     VENDOR_DIR="/usr/$(get_libdir)/OpenCL/vendors/${PN}"
     insinto "${VENDOR_DIR}"
-    doins "${BUILD_DIR}/lib/libOpenCL.so.1.2"
+    doins "${BUILD_DIR}/api/opencl/khronos/icd/libOpenCL.so.1.2"
     doins "${BUILD_DIR}/lib/libamdocl64.so"
     fperms a+x "${VENDOR_DIR}/libOpenCL.so.1.2"
     fperms a+x "${VENDOR_DIR}/libamdocl64.so"
