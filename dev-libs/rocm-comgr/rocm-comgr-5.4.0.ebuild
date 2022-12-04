@@ -24,7 +24,7 @@ PATCHES=(
 	"${FILESDIR}/${PN}-5.1.3-Find-CLANG_RESOURCE_DIR.patch"
 	"${FILESDIR}/${PN}-5.1.3-clang-fix-include.patch"
 	"${FILESDIR}/${PN}-5.1.3-rocm-path.patch"
-	"${FILESDIR}/${PN}-5.3.0-llvm15.patch"
+#	"${FILESDIR}/${PN}-5.3.0-llvm15.patch"
 )
 
 DESCRIPTION="Radeon Open Compute Code Object Manager"

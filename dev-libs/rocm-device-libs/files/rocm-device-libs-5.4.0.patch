@@ -1,0 +1,12 @@
+--- a/ockl/src/mtime.cl	2022-12-05 01:37:13.009940197 +0900
++++ b/ockl/src/mtime.cl	2022-12-05 01:36:23.018658042 +0900
+@@ -17,7 +17,8 @@
+ __attribute__((target("gfx11-insts"))) static ulong
+ msg_realtime(void)
+ {
+-    return __builtin_amdgcn_s_sendmsg_rtnl(0x83);
++    // return __builtin_amdgcn_s_sendmsg_rtnl(0x83);
++    return 0;
+ }
+ 
+ // Deprecated
