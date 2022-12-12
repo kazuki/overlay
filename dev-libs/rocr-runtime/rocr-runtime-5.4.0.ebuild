@@ -48,6 +48,12 @@ src_prepare() {
 	cmake_src_prepare
 }
 
+src_configure() {
+	append-cppflags -DNDEBUG
+	cmake_src_configure
+}
+
+
 src_compile() {
 	export HIP_DEVICE_LIB_PATH=/usr/lib/amdgcn/bitcode
 	cmake_src_compile
