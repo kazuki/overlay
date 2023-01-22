@@ -1,26 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 6328fb1d0d2b..2236ba48cf8b 100644
+index f33ee7cb9741..eb5089440899 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -238,7 +238,7 @@ else()
- endif()
- 
- set(DEFAULT_GPU_ARCH "" CACHE STRING "Optional: Default GPU architecture to compile for when targeting GPUs (e.g.: sm_60 or gfx900)")
--set(ROCM_LIBS "-L${ROCM_PATH}/lib -L${ROCM_PATH}/hip/lib -lamdhip64" CACHE STRING "Necessary libraries for ROCm")
-+set(ROCM_LIBS "-L${ROCM_PATH}/lib -L${ROCM_PATH}/hip/lib -lamdhip64 -lboost_context" CACHE STRING "Necessary libraries for ROCm")
- 
- set(DEFAULT_WIN32_CUDA_LINK_LINE "-L$HIPSYCL_CUDA_LIB_PATH -lcudart")
- set(DEFAULT_CUDA_LINK_LINE "-Wl,-rpath=$HIPSYCL_CUDA_LIB_PATH -L$HIPSYCL_CUDA_LIB_PATH -lcudart")
-@@ -262,7 +262,7 @@ set(DEFAULT_WIN32_SEQUENTIAL_LINK_LINE "-L${Boost_LIBRARY_DIR} ${DEFAULT_LINK_PR
- # need add_subdirectory(src) before this!
- set(DEFAULT_APPLE_OMP_LINK_LINE "${DEFAULT_BOOST_LIBRARIES} ${DEFAULT_OMP_FLAG} ${hipSYCL_OpenMP_CXX_LIBRARIES}")
- set(DEFAULT_APPLE_SEQUENTIAL_LINK_LINE "${DEFAULT_BOOST_LIBRARIES} ${hipSYCL_OpenMP_CXX_LIBRARIES}")
--set(DEFAULT_OMP_LINK_LINE "-L${Boost_LIBRARY_DIR} -lboost_context -lboost_fiber -Wl,-rpath=${Boost_LIBRARY_DIR} ${DEFAULT_OMP_FLAG}")
-+set(DEFAULT_OMP_LINK_LINE "-L${Boost_LIBRARY_DIR} -lboost_context -lboost_fiber -Wl,-rpath=${Boost_LIBRARY_DIR} ${DEFAULT_OMP_FLAG} -lboost_context")
- set(DEFAULT_SEQUENTIAL_LINK_LINE "-L${Boost_LIBRARY_DIR} -lboost_context -lboost_fiber -Wl,-rpath=${Boost_LIBRARY_DIR}")
- 
- # If no link lines given, set to default.
-@@ -308,7 +308,7 @@ if(NOT ROCM_CXX_FLAGS)
+@@ -323,7 +323,7 @@ if(NOT ROCM_CXX_FLAGS)
    # __float128 even though it is not supported for CUDA / HIP,
    # see https://bugs.llvm.org/show_bug.cgi?id=47559.
  
@@ -29,20 +11,20 @@ index 6328fb1d0d2b..2236ba48cf8b 100644
  endif()
  
  if(NOT CUDA_CXX_FLAGS)	
-@@ -366,7 +366,7 @@ set(SYCLCC_CONFIG_FILE "{
+@@ -381,7 +381,7 @@ set(SYCLCC_CONFIG_FILE "{
  file(WRITE ${SYCLCC_CONFIG_FILE_PATH} ${SYCLCC_CONFIG_FILE})
  
  set(HIPSYCL_INSTALL_CMAKE_DIR
 -  "lib/cmake/${PROJECT_NAME}" CACHE PATH "Install path for CMake config files")
 +  "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}" CACHE PATH "Install path for CMake config files")
  
- # must stay after add_subdirectory(src) as HIPSYCL_RT_LIBRARY_OUTPUT_NAME is declared there
+ # must stay after add_subdirectory(src) as HIPSYCL_COMMON_LIBRARY_OUTPUT_NAME is declared there
  configure_file(
 diff --git a/bin/syclcc-clang b/bin/syclcc-clang
-index 2b91145affaa..b19b52ace8e6 100755
+index a4fa5b88ca04..610b8b2e01b8 100755
 --- a/bin/syclcc-clang
 +++ b/bin/syclcc-clang
-@@ -466,16 +466,16 @@ class syclcc_config:
+@@ -467,16 +467,16 @@ class syclcc_config:
    def _get_rocm_substitution_vars(self):
      return {
        'HIPSYCL_ROCM_PATH' : self.rocm_path,
@@ -62,7 +44,7 @@ index 2b91145affaa..b19b52ace8e6 100755
      }
      if sys.platform.startswith("win32"):
        vars['HIPSYCL_CUDA_LIB_PATH'] = os.path.join(self.cuda_path, "lib", "x64")
-@@ -487,7 +487,7 @@ class syclcc_config:
+@@ -488,7 +488,7 @@ class syclcc_config:
    def _get_omp_substitution_vars(self):
      return {
        'HIPSYCL_PATH' : self.hipsycl_installation_path,
@@ -71,25 +53,25 @@ index 2b91145affaa..b19b52ace8e6 100755
      }
  
    def _substitute_template_string(self, template_string, substitution_dict):
-@@ -619,7 +619,7 @@ class syclcc_config:
+@@ -620,7 +620,7 @@ class syclcc_config:
  
    @property
    def runtime_backends(self):
 -    backend_path = os.path.join(self.hipsycl_installation_path, "lib", "hipSYCL")
 +    backend_path = os.path.join(self.hipsycl_installation_path, "lib64", "hipSYCL")
-     return os.listdir(backend_path)
+     content = os.listdir(backend_path)
+     return [c for c in content if os.path.isfile(os.path.join(backend_path, c))]
  
-   @property
-@@ -696,7 +696,7 @@ class syclcc_config:
-     if sys.platform.startswith('win32'):
-       return os.path.join(self.hipsycl_installation_path, "bin", "hipSYCL_clang.dll")
+@@ -700,7 +700,7 @@ class syclcc_config:
+     elif sys.platform == "darwin":
+       return os.path.join(self.hipsycl_installation_path, "lib", "libhipSYCL_clang.dylib")
      else:
 -      return os.path.join(self.hipsycl_installation_path, "lib", "libhipSYCL_clang.so")
 +      return os.path.join(self.hipsycl_installation_path, "lib64", "libhipSYCL_clang.so")
  
    @property
    def sequential_link_line(self):
-@@ -1092,7 +1092,7 @@ class spirv_multipass_invocation:
+@@ -1096,7 +1096,7 @@ class spirv_multipass_invocation:
    def __init__(self, config):
      self._config = config
      self._hipsycl_lib_path = os.path.join(
@@ -98,7 +80,7 @@ index 2b91145affaa..b19b52ace8e6 100755
      self.set_temp_dir("/tmp")
  
    def set_temp_dir(self, temp_dir):
-@@ -1267,8 +1267,6 @@ class cuda_nvcxx_invocation:
+@@ -1271,8 +1271,6 @@ class cuda_nvcxx_invocation:
      flags = [
          "-cuda",
          "-D__HIPSYCL_ENABLE_CUDA_TARGET__",
@@ -107,7 +89,7 @@ index 2b91145affaa..b19b52ace8e6 100755
        ]
  
      flags += self._cxx_flags
-@@ -1487,7 +1485,7 @@ class compiler:
+@@ -1544,7 +1542,7 @@ class compiler:
      self._targets = config.targets
      self._common_compiler_args = config.common_compiler_args
      self._hipsycl_path = config.hipsycl_installation_path
@@ -116,7 +98,7 @@ index 2b91145affaa..b19b52ace8e6 100755
      self._hipsycl_include_path = config.hipsycl_include_path
      self._is_explicit_multipass = config.is_explicit_multipass
      self._save_temps = config.save_temps
-@@ -1665,7 +1663,6 @@ class compiler:
+@@ -1724,7 +1722,6 @@ class compiler:
    @property
    def common_cxx_flags(self):
      args = [
@@ -125,23 +107,35 @@ index 2b91145affaa..b19b52ace8e6 100755
      ] + self._common_compiler_args
  
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index 2a2d0340ccd4..9f914c4aca35 100644
+index a543391ce5bb..2c5d19951ec4 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -4,7 +4,7 @@ if(BUILD_CLANG_PLUGIN)
-   add_subdirectory(compiler)
- endif()
+@@ -3,7 +3,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+ add_subdirectory(common)
  
--list( APPEND CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib )
-+list( APPEND CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR} )
+ list( APPEND CMAKE_INSTALL_RPATH
+-  ${CMAKE_INSTALL_PREFIX}/lib
++  ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
+   ${CMAKE_INSTALL_PREFIX}/lib/hipSYCL/llvm-to-backend)
  
- add_subdirectory(runtime)
- add_subdirectory(tools)
+ set(WITH_LLVM_TO_AMDGPU_AMDHSA false)
+diff --git a/src/common/CMakeLists.txt b/src/common/CMakeLists.txt
+index 7566ef8d622f..2640ecd6af56 100644
+--- a/src/common/CMakeLists.txt
++++ b/src/common/CMakeLists.txt
+@@ -45,5 +45,5 @@ endif()
+ install(TARGETS hipSYCL-common
+         EXPORT install_exports
+         RUNTIME DESTINATION bin
+-        LIBRARY DESTINATION lib
+-        ARCHIVE DESTINATION lib)
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 diff --git a/src/compiler/CMakeLists.txt b/src/compiler/CMakeLists.txt
-index abd5f725fb2b..80a94dc5acbc 100644
+index 80775c85c954..46a1d2a76a8b 100644
 --- a/src/compiler/CMakeLists.txt
 +++ b/src/compiler/CMakeLists.txt
-@@ -80,6 +80,6 @@ else()
+@@ -93,8 +93,8 @@ else()
  endif()
  
  install(TARGETS hipSYCL_clang
@@ -150,8 +144,10 @@ index abd5f725fb2b..80a94dc5acbc 100644
          RUNTIME DESTINATION bin
 -        ARCHIVE DESTINATION lib)
 +        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+ 
+ add_subdirectory(llvm-to-backend)
 diff --git a/src/runtime/CMakeLists.txt b/src/runtime/CMakeLists.txt
-index 8a283f15e9da..ce26a9083c97 100644
+index 60c5798abc5a..5c07593c9413 100644
 --- a/src/runtime/CMakeLists.txt
 +++ b/src/runtime/CMakeLists.txt
 @@ -82,8 +82,8 @@ endif()
@@ -165,7 +161,7 @@ index 8a283f15e9da..ce26a9083c97 100644
  
  
  if(WITH_CUDA_BACKEND)
-@@ -109,8 +109,8 @@ if(WITH_CUDA_BACKEND)
+@@ -114,8 +114,8 @@ if(WITH_CUDA_BACKEND)
  
    install(TARGETS rt-backend-cuda
          RUNTIME DESTINATION bin/hipSYCL
@@ -176,7 +172,7 @@ index 8a283f15e9da..ce26a9083c97 100644
  endif()
  
  if(WITH_ROCM_BACKEND)
-@@ -146,8 +146,8 @@ if(WITH_ROCM_BACKEND)
+@@ -156,8 +156,8 @@ if(WITH_ROCM_BACKEND)
  
    install(TARGETS rt-backend-hip
          RUNTIME DESTINATION bin/hipSYCL
@@ -187,8 +183,8 @@ index 8a283f15e9da..ce26a9083c97 100644
  endif()
  
  if(WITH_LEVEL_ZERO_BACKEND)
-@@ -166,8 +166,8 @@ if(WITH_LEVEL_ZERO_BACKEND)
-   target_link_libraries(rt-backend-ze PRIVATE ${HIPSYCL_RT_EXTRA_LINKER_FLAGS})
+@@ -181,8 +181,8 @@ if(WITH_LEVEL_ZERO_BACKEND)
+   endif()
  
    install(TARGETS rt-backend-ze
 -        LIBRARY DESTINATION lib/hipSYCL
@@ -198,7 +194,7 @@ index 8a283f15e9da..ce26a9083c97 100644
  endif()
  
  if(WITH_CPU_BACKEND)
-@@ -208,7 +208,7 @@ if(WITH_CPU_BACKEND)
+@@ -223,7 +223,6 @@ if(WITH_CPU_BACKEND)
  
    install(TARGETS rt-backend-omp
        RUNTIME DESTINATION bin/hipSYCL
@@ -207,4 +203,4 @@ index 8a283f15e9da..ce26a9083c97 100644
 +      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/hipSYCL
 +      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/hipSYCL)
  endif()
- 
+-
