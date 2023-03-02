@@ -32,6 +32,7 @@ src_configure() {
         -DCMAKE_INSTALL_PREFIX=/usr
         -DCMAKE_INSTALL_LIBDIR=lib64
         -DCLANG_INCLUDE_PATH=/usr/lib/llvm/${major}/include/clang
+        -DSYCLCC_CONFIG_FILE_GLOBAL_INSTALLATION=true
     )
     cmake_src_configure
 }

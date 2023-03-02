@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index f33ee7cb9741..eb5089440899 100644
+index 85727e2ad651..bd36b1fe9e33 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -323,7 +323,7 @@ if(NOT ROCM_CXX_FLAGS)
@@ -21,89 +21,80 @@ index f33ee7cb9741..eb5089440899 100644
  # must stay after add_subdirectory(src) as HIPSYCL_COMMON_LIBRARY_OUTPUT_NAME is declared there
  configure_file(
 diff --git a/bin/syclcc-clang b/bin/syclcc-clang
-index a4fa5b88ca04..610b8b2e01b8 100755
+index 8632962e1386..051f99aedf67 100755
 --- a/bin/syclcc-clang
 +++ b/bin/syclcc-clang
-@@ -467,16 +467,16 @@ class syclcc_config:
+@@ -493,16 +493,16 @@ class syclcc_config:
    def _get_rocm_substitution_vars(self):
      return {
-       'HIPSYCL_ROCM_PATH' : self.rocm_path,
--      'HIPSYCL_ROCM_LIB_PATH' : os.path.join(self.rocm_path, "lib"),
-+      'HIPSYCL_ROCM_LIB_PATH' : os.path.join(self.rocm_path, "lib64"),
-       'HIPSYCL_PATH' : self.hipsycl_installation_path,
--      'HIPSYCL_LIB_PATH' : os.path.join(self.hipsycl_installation_path, "lib")
-+      'HIPSYCL_LIB_PATH' : os.path.join(self.hipsycl_installation_path, "lib64")
+       'OPENSYCL_ROCM_PATH' : self.rocm_path,
+-      'OPENSYCL_ROCM_LIB_PATH' : os.path.join(self.rocm_path, "lib"),
++      'OPENSYCL_ROCM_LIB_PATH' : os.path.join(self.rocm_path, "lib64"),
+       'OPENSYCL_PATH' : self.opensycl_installation_path,
+-      'OPENSYCL_LIB_PATH' : os.path.join(self.opensycl_installation_path, "lib")
++      'OPENSYCL_LIB_PATH' : os.path.join(self.opensycl_installation_path, "lib64")
      }
  
    def _get_cuda_substitution_vars(self):
      vars = {
-       'HIPSYCL_CUDA_PATH' : self.cuda_path,
-       'HIPSYCL_PATH' : self.hipsycl_installation_path,
--      'HIPSYCL_LIB_PATH' : os.path.join(self.hipsycl_installation_path, "lib")
-+      'HIPSYCL_LIB_PATH' : os.path.join(self.hipsycl_installation_path, "lib64")
+       'OPENSYCL_CUDA_PATH' : self.cuda_path,
+       'OPENSYCL_PATH' : self.opensycl_installation_path,
+-      'OPENSYCL_LIB_PATH' : os.path.join(self.opensycl_installation_path, "lib")
++      'OPENSYCL_LIB_PATH' : os.path.join(self.opensycl_installation_path, "lib64")
      }
      if sys.platform.startswith("win32"):
-       vars['HIPSYCL_CUDA_LIB_PATH'] = os.path.join(self.cuda_path, "lib", "x64")
-@@ -488,7 +488,7 @@ class syclcc_config:
+       vars['OPENSYCL_CUDA_LIB_PATH'] = os.path.join(self.cuda_path, "lib", "x64")
+@@ -514,7 +514,7 @@ class syclcc_config:
    def _get_omp_substitution_vars(self):
      return {
-       'HIPSYCL_PATH' : self.hipsycl_installation_path,
--      'HIPSYCL_LIB_PATH' : os.path.join(self.hipsycl_installation_path, "lib")
-+      'HIPSYCL_LIB_PATH' : os.path.join(self.hipsycl_installation_path, "lib64")
+       'OPENSYCL_PATH' : self.opensycl_installation_path,
+-      'OPENSYCL_LIB_PATH' : os.path.join(self.opensycl_installation_path, "lib")
++      'OPENSYCL_LIB_PATH' : os.path.join(self.opensycl_installation_path, "lib64")
      }
  
    def _substitute_template_string(self, template_string, substitution_dict):
-@@ -620,7 +620,7 @@ class syclcc_config:
+@@ -651,7 +651,7 @@ class syclcc_config:
  
    @property
    def runtime_backends(self):
--    backend_path = os.path.join(self.hipsycl_installation_path, "lib", "hipSYCL")
-+    backend_path = os.path.join(self.hipsycl_installation_path, "lib64", "hipSYCL")
+-    backend_path = os.path.join(self.opensycl_installation_path, "lib", "hipSYCL")
++    backend_path = os.path.join(self.opensycl_installation_path, "lib64", "hipSYCL")
      content = os.listdir(backend_path)
      return [c for c in content if os.path.isfile(os.path.join(backend_path, c))]
  
-@@ -700,7 +700,7 @@ class syclcc_config:
+@@ -731,7 +731,7 @@ class syclcc_config:
      elif sys.platform == "darwin":
-       return os.path.join(self.hipsycl_installation_path, "lib", "libhipSYCL_clang.dylib")
+       return os.path.join(self.opensycl_installation_path, "lib", "libopensycl-clang.dylib")
      else:
--      return os.path.join(self.hipsycl_installation_path, "lib", "libhipSYCL_clang.so")
-+      return os.path.join(self.hipsycl_installation_path, "lib64", "libhipSYCL_clang.so")
+-      return os.path.join(self.opensycl_installation_path, "lib", "libopensycl-clang.so")
++      return os.path.join(self.opensycl_installation_path, "lib64", "libopensycl-clang.so")
  
    @property
    def sequential_link_line(self):
-@@ -1096,7 +1096,7 @@ class spirv_multipass_invocation:
+@@ -1127,7 +1127,7 @@ class spirv_multipass_invocation:
    def __init__(self, config):
      self._config = config
-     self._hipsycl_lib_path = os.path.join(
--      config.hipsycl_installation_path, "lib/")
-+      config.hipsycl_installation_path, "lib64/")
+     self._opensycl_lib_path = os.path.join(
+-      config.opensycl_installation_path, "lib/")
++      config.opensycl_installation_path, "lib64/")
      self.set_temp_dir("/tmp")
  
    def set_temp_dir(self, temp_dir):
-@@ -1271,8 +1271,6 @@ class cuda_nvcxx_invocation:
-     flags = [
-         "-cuda",
-         "-D__HIPSYCL_ENABLE_CUDA_TARGET__",
--        # Needed to avoid warnings about unused functions/variables in SYCL headers
--        "-isystem", self._hipsycl_include_path
-       ]
- 
-     flags += self._cxx_flags
-@@ -1544,7 +1542,7 @@ class compiler:
+@@ -1575,7 +1575,7 @@ class compiler:
      self._targets = config.targets
      self._common_compiler_args = config.common_compiler_args
-     self._hipsycl_path = config.hipsycl_installation_path
--    self._hipsycl_lib_path = os.path.join(self._hipsycl_path, "lib/")
-+    self._hipsycl_lib_path = os.path.join(self._hipsycl_path, "lib64/")
-     self._hipsycl_include_path = config.hipsycl_include_path
+     self._opensycl_path = config.opensycl_installation_path
+-    self._opensycl_lib_path = os.path.join(self._opensycl_path, "lib/")
++    self._opensycl_lib_path = os.path.join(self._opensycl_path, "lib64/")
+     self._opensycl_include_path = config.opensycl_include_path
      self._is_explicit_multipass = config.is_explicit_multipass
      self._save_temps = config.save_temps
-@@ -1724,7 +1722,6 @@ class compiler:
+@@ -1755,7 +1755,6 @@ class compiler:
    @property
    def common_cxx_flags(self):
      args = [
--      "-isystem", self._hipsycl_include_path,
-       "-D__HIPSYCL__"
+-      "-isystem", self._opensycl_include_path,
+       "-D__OPENSYCL__","-D__HIPSYCL__",
      ] + self._common_compiler_args
  
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
@@ -120,11 +111,11 @@ index a543391ce5bb..2c5d19951ec4 100644
  
  set(WITH_LLVM_TO_AMDGPU_AMDHSA false)
 diff --git a/src/common/CMakeLists.txt b/src/common/CMakeLists.txt
-index 7566ef8d622f..2640ecd6af56 100644
+index 7618e93ce2fc..19630668b3e8 100644
 --- a/src/common/CMakeLists.txt
 +++ b/src/common/CMakeLists.txt
 @@ -45,5 +45,5 @@ endif()
- install(TARGETS hipSYCL-common
+ install(TARGETS opensycl-common
          EXPORT install_exports
          RUNTIME DESTINATION bin
 -        LIBRARY DESTINATION lib
@@ -132,13 +123,13 @@ index 7566ef8d622f..2640ecd6af56 100644
 +        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 +        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 diff --git a/src/compiler/CMakeLists.txt b/src/compiler/CMakeLists.txt
-index 80775c85c954..46a1d2a76a8b 100644
+index 9a38500a2032..418275accae4 100644
 --- a/src/compiler/CMakeLists.txt
 +++ b/src/compiler/CMakeLists.txt
 @@ -93,8 +93,8 @@ else()
  endif()
  
- install(TARGETS hipSYCL_clang
+ install(TARGETS opensycl-clang
 -        LIBRARY DESTINATION lib
 +        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
          RUNTIME DESTINATION bin
@@ -147,7 +138,7 @@ index 80775c85c954..46a1d2a76a8b 100644
  
  add_subdirectory(llvm-to-backend)
 diff --git a/src/runtime/CMakeLists.txt b/src/runtime/CMakeLists.txt
-index 60c5798abc5a..5c07593c9413 100644
+index a12de89b12d9..7716e8bd76a5 100644
 --- a/src/runtime/CMakeLists.txt
 +++ b/src/runtime/CMakeLists.txt
 @@ -82,8 +82,8 @@ endif()
