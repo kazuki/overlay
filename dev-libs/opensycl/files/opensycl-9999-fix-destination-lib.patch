@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 6f7a645e8580..95b3bd505efa 100644
+index 6f7a645e..8bf406e9 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -323,7 +323,7 @@ if(NOT ROCM_CXX_FLAGS)
@@ -11,15 +11,7 @@ index 6f7a645e8580..95b3bd505efa 100644
  endif()
  
  if(NOT CUDA_CXX_FLAGS)	
-@@ -381,7 +381,6 @@ set(SYCLCC_CONFIG_FILE "{
- file(WRITE ${SYCLCC_CONFIG_FILE_PATH} ${SYCLCC_CONFIG_FILE})
- 
- 
--
- # must stay after add_subdirectory(src) as HIPSYCL_COMMON_LIBRARY_OUTPUT_NAME is declared there
- configure_file(
-   ${PROJECT_SOURCE_DIR}/include/hipSYCL/common/config.hpp.in
-@@ -416,7 +415,7 @@ include(GNUInstallDirs)
+@@ -416,7 +416,7 @@ include(GNUInstallDirs)
  
  
  set(HIPSYCL_INSTALL_CMAKE_DIR
@@ -28,7 +20,7 @@ index 6f7a645e8580..95b3bd505efa 100644
  
  # Set relative paths for install root in the following variables so that
  # configure_package_config_file will generate paths relative whatever is
-@@ -464,7 +463,7 @@ mark_as_advanced(
+@@ -464,7 +464,7 @@ mark_as_advanced(
  # New package
  
  set(OPENSYCL_INSTALL_CMAKE_DIR
@@ -38,10 +30,10 @@ index 6f7a645e8580..95b3bd505efa 100644
  # Set relative paths for install root in the following variables so that
  # configure_package_config_file will generate paths relative whatever is
 diff --git a/bin/syclcc-clang b/bin/syclcc-clang
-index 8632962e1386..051f99aedf67 100755
+index 862c7a70..b3e8fa3f 100755
 --- a/bin/syclcc-clang
 +++ b/bin/syclcc-clang
-@@ -493,16 +493,16 @@ class syclcc_config:
+@@ -494,16 +494,16 @@ class syclcc_config:
    def _get_rocm_substitution_vars(self):
      return {
        'OPENSYCL_ROCM_PATH' : self.rocm_path,
@@ -61,7 +53,7 @@ index 8632962e1386..051f99aedf67 100755
      }
      if sys.platform.startswith("win32"):
        vars['OPENSYCL_CUDA_LIB_PATH'] = os.path.join(self.cuda_path, "lib", "x64")
-@@ -514,7 +514,7 @@ class syclcc_config:
+@@ -515,7 +515,7 @@ class syclcc_config:
    def _get_omp_substitution_vars(self):
      return {
        'OPENSYCL_PATH' : self.opensycl_installation_path,
@@ -70,7 +62,7 @@ index 8632962e1386..051f99aedf67 100755
      }
  
    def _substitute_template_string(self, template_string, substitution_dict):
-@@ -651,7 +651,7 @@ class syclcc_config:
+@@ -652,7 +652,7 @@ class syclcc_config:
  
    @property
    def runtime_backends(self):
@@ -79,7 +71,7 @@ index 8632962e1386..051f99aedf67 100755
      content = os.listdir(backend_path)
      return [c for c in content if os.path.isfile(os.path.join(backend_path, c))]
  
-@@ -731,7 +731,7 @@ class syclcc_config:
+@@ -732,7 +732,7 @@ class syclcc_config:
      elif sys.platform == "darwin":
        return os.path.join(self.opensycl_installation_path, "lib", "libopensycl-clang.dylib")
      else:
@@ -88,7 +80,7 @@ index 8632962e1386..051f99aedf67 100755
  
    @property
    def sequential_link_line(self):
-@@ -1127,7 +1127,7 @@ class spirv_multipass_invocation:
+@@ -1128,7 +1128,7 @@ class spirv_multipass_invocation:
    def __init__(self, config):
      self._config = config
      self._opensycl_lib_path = os.path.join(
@@ -97,7 +89,7 @@ index 8632962e1386..051f99aedf67 100755
      self.set_temp_dir("/tmp")
  
    def set_temp_dir(self, temp_dir):
-@@ -1575,7 +1575,7 @@ class compiler:
+@@ -1576,7 +1576,7 @@ class compiler:
      self._targets = config.targets
      self._common_compiler_args = config.common_compiler_args
      self._opensycl_path = config.opensycl_installation_path
@@ -106,7 +98,7 @@ index 8632962e1386..051f99aedf67 100755
      self._opensycl_include_path = config.opensycl_include_path
      self._is_explicit_multipass = config.is_explicit_multipass
      self._save_temps = config.save_temps
-@@ -1755,7 +1755,6 @@ class compiler:
+@@ -1756,7 +1756,6 @@ class compiler:
    @property
    def common_cxx_flags(self):
      args = [
@@ -115,7 +107,7 @@ index 8632962e1386..051f99aedf67 100755
      ] + self._common_compiler_args
  
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index a543391ce5bb..efd2789944a8 100644
+index a543391c..efd27899 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
 @@ -3,8 +3,8 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -130,7 +122,7 @@ index a543391ce5bb..efd2789944a8 100644
  set(WITH_LLVM_TO_AMDGPU_AMDHSA false)
  set(WITH_LLVM_TO_PTX false)
 diff --git a/src/common/CMakeLists.txt b/src/common/CMakeLists.txt
-index 7618e93ce2fc..19630668b3e8 100644
+index 7618e93c..19630668 100644
 --- a/src/common/CMakeLists.txt
 +++ b/src/common/CMakeLists.txt
 @@ -45,5 +45,5 @@ endif()
@@ -142,9 +134,18 @@ index 7618e93ce2fc..19630668b3e8 100644
 +        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 +        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 diff --git a/src/compiler/CMakeLists.txt b/src/compiler/CMakeLists.txt
-index 9a38500a2032..418275accae4 100644
+index 03758bb1..908903b3 100644
 --- a/src/compiler/CMakeLists.txt
 +++ b/src/compiler/CMakeLists.txt
+@@ -84,7 +84,7 @@ target_link_libraries(opensycl-clang
+ if(APPLE)
+   target_link_libraries(opensycl-clang -Wl,-undefined -Wl,dynamic_lookup)
+ elseif(WIN32)
+-  set(CLANG_LIBRARY_DIR ${LLVM_PREFIX_DIR}/lib/)
++  set(CLANG_LIBRARY_DIR ${LLVM_PREFIX_DIR}/${CMAKE_INSTALL_LIBDIR}/)
+   target_link_directories(opensycl-clang PRIVATE ${CLANG_LIBRARY_DIR})
+   target_link_libraries(opensycl-clang clang LLVMSupport)
+   set_target_properties(opensycl-clang PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS On)
 @@ -93,8 +93,8 @@ else()
  endif()
  
@@ -157,7 +158,7 @@ index 9a38500a2032..418275accae4 100644
  
  add_subdirectory(llvm-to-backend)
 diff --git a/src/compiler/llvm-to-backend/CMakeLists.txt b/src/compiler/llvm-to-backend/CMakeLists.txt
-index 8fbfcff1ad51..fa1704edc3cb 100644
+index 455967ed..3b94493c 100644
 --- a/src/compiler/llvm-to-backend/CMakeLists.txt
 +++ b/src/compiler/llvm-to-backend/CMakeLists.txt
 @@ -29,7 +29,7 @@ function(create_llvm_based_library)
@@ -178,17 +179,65 @@ index 8fbfcff1ad51..fa1704edc3cb 100644
  endfunction()
  
  function(add_hipsycl_llvm_backend)
-@@ -109,7 +109,7 @@ if(WITH_SSCP_COMPILER)
- 
-     # Install LLVM-SPIRV translator for llvm-to-spirv
-     set(LLVMSPIRV_BRANCH llvm_release_${LLVM_VERSION_MAJOR}0)
+@@ -111,7 +111,7 @@ if(WITH_SSCP_COMPILER)
+     if(NOT LLVMSPIRV_BRANCH)
+       set(LLVMSPIRV_BRANCH llvm_release_${LLVM_VERSION_MAJOR}0)
+     endif()
 -    set(LLVMSPIRV_RELATIVE_INSTALLDIR lib/hipSYCL/ext/llvm-spirv)
 +    set(LLVMSPIRV_RELATIVE_INSTALLDIR ${CMAKE_INSTALL_LIBDIR}/hipSYCL/ext/llvm-spirv)
      set(LLVMSPIRV_INSTALLDIR ${CMAKE_INSTALL_PREFIX}/${LLVMSPIRV_RELATIVE_INSTALLDIR})
      set(LLVMSPIRV_PATH ${LLVMSPIRV_INSTALLDIR}/bin/llvm-spirv)
      set(LLVMSPIRV_RELATIVE_PATH ${LLVMSPIRV_RELATIVE_INSTALLDIR}/bin/llvm-spirv)
+@@ -156,7 +156,7 @@ if(WITH_SSCP_COMPILER)
+     target_compile_definitions(llvm-to-amdgpu PRIVATE
+       -DHIPSYCL_ROCM_PATH="${ROCM_PATH}")
+ 
+-    find_library(HIPRTC_LIBRARY hiprtc HINTS ${ROCM_PATH}/lib)
++    find_library(HIPRTC_LIBRARY hiprtc HINTS ${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR})
+     if(HIPRTC_LIBRARY)
+       message(STATUS "Found hipRTC: ${HIPRTC_LIBRARY}")
+       target_compile_definitions(llvm-to-amdgpu PRIVATE -DHIPSYCL_SSCP_AMDGPU_USE_HIPRTC)
+diff --git a/src/compiler/llvm-to-backend/amdgpu/LLVMToAmdgpu.cpp b/src/compiler/llvm-to-backend/amdgpu/LLVMToAmdgpu.cpp
+index d8f91a0a..20166cce 100644
+--- a/src/compiler/llvm-to-backend/amdgpu/LLVMToAmdgpu.cpp
++++ b/src/compiler/llvm-to-backend/amdgpu/LLVMToAmdgpu.cpp
+@@ -134,7 +134,7 @@ bool LLVMToAmdgpuTranslator::toBackendFlavor(llvm::Module &M, PassHandler& PH) {
+ 
+   std::string BuiltinBitcodeFile = 
+     common::filesystem::join_path(common::filesystem::get_install_directory(),
+-      {"lib", "hipSYCL", "bitcode", "libkernel-sscp-amdgpu-amdhsa-full.bc"});
++      {"lib64", "hipSYCL", "bitcode", "libkernel-sscp-amdgpu-amdhsa-full.bc"});
+   
+   if(!this->linkBitcodeFile(M, BuiltinBitcodeFile))
+     return false;
+diff --git a/src/compiler/llvm-to-backend/ptx/LLVMToPtx.cpp b/src/compiler/llvm-to-backend/ptx/LLVMToPtx.cpp
+index e396e3fb..56ad039f 100644
+--- a/src/compiler/llvm-to-backend/ptx/LLVMToPtx.cpp
++++ b/src/compiler/llvm-to-backend/ptx/LLVMToPtx.cpp
+@@ -147,7 +147,7 @@ bool LLVMToPtxTranslator::toBackendFlavor(llvm::Module &M, PassHandler& PH) {
+ 
+   std::string BuiltinBitcodeFile = 
+     common::filesystem::join_path(common::filesystem::get_install_directory(),
+-      {"lib", "hipSYCL", "bitcode", "libkernel-sscp-ptx-full.bc"});
++      {"lib64", "hipSYCL", "bitcode", "libkernel-sscp-ptx-full.bc"});
+   
+   std::string LibdeviceFile;
+   if(!LibdevicePath::get(LibdeviceFile)) {
+diff --git a/src/compiler/llvm-to-backend/spirv/LLVMToSpirv.cpp b/src/compiler/llvm-to-backend/spirv/LLVMToSpirv.cpp
+index 7251ad80..f17578a2 100644
+--- a/src/compiler/llvm-to-backend/spirv/LLVMToSpirv.cpp
++++ b/src/compiler/llvm-to-backend/spirv/LLVMToSpirv.cpp
+@@ -171,7 +171,7 @@ bool LLVMToSpirvTranslator::toBackendFlavor(llvm::Module &M, PassHandler& PH) {
+ 
+   std::string BuiltinBitcodeFile = 
+     common::filesystem::join_path(common::filesystem::get_install_directory(),
+-      {"lib", "hipSYCL", "bitcode", "libkernel-sscp-spirv-full.bc"});
++      {"lib64", "hipSYCL", "bitcode", "libkernel-sscp-spirv-full.bc"});
+ 
+   if (!this->linkBitcodeFile(M, BuiltinBitcodeFile, M.getTargetTriple(), M.getDataLayoutStr()))
+     return false;
 diff --git a/src/libkernel/sscp/CMakeLists.txt b/src/libkernel/sscp/CMakeLists.txt
-index 1cfbc762511e..4bb904964e58 100644
+index 1cfbc762..4bb90496 100644
 --- a/src/libkernel/sscp/CMakeLists.txt
 +++ b/src/libkernel/sscp/CMakeLists.txt
 @@ -23,7 +23,7 @@ function(libkernel_generate_bitcode_library)
@@ -210,7 +259,7 @@ index 1cfbc762511e..4bb904964e58 100644
    add_custom_target(libkernel-sscp-${target} ALL
      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 diff --git a/src/runtime/CMakeLists.txt b/src/runtime/CMakeLists.txt
-index a12de89b12d9..7716e8bd76a5 100644
+index a12de89b..1d02f341 100644
 --- a/src/runtime/CMakeLists.txt
 +++ b/src/runtime/CMakeLists.txt
 @@ -82,8 +82,8 @@ endif()
@@ -257,7 +306,7 @@ index a12de89b12d9..7716e8bd76a5 100644
  endif()
  
  if(WITH_CPU_BACKEND)
-@@ -223,7 +223,6 @@ if(WITH_CPU_BACKEND)
+@@ -223,7 +223,7 @@ if(WITH_CPU_BACKEND)
  
    install(TARGETS rt-backend-omp
        RUNTIME DESTINATION bin/hipSYCL
@@ -266,4 +315,4 @@ index a12de89b12d9..7716e8bd76a5 100644
 +      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/hipSYCL
 +      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/hipSYCL)
  endif()
--
+ 

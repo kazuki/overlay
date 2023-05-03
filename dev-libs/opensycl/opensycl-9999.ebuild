@@ -1,5 +1,7 @@
 EAPI=8
-inherit cmake
+inherit cmake llvm
+
+LLVM_MAX_SLOT=15
 
 if [[ ${PV} == *9999* ]]; then
 	inherit git-r3
@@ -16,6 +18,7 @@ CMAKE_BUILD_TYPE=Release
 KEYWORDS="~amd64"
 
 BDEPEND="
+    sys-devel/clang:${LLVM_MAX_SLOT}
     dev-libs/boost[context]
     dev-util/hip
 "
@@ -25,13 +28,10 @@ PATCHES=(
 )
 
 src_configure() {
-    local version=()
-    read -r -a version < <(clang++ --version)
-    local major=${version[-1]%%.*}
     local mycmakeargs=(
         -DCMAKE_INSTALL_PREFIX=/usr
         -DCMAKE_INSTALL_LIBDIR=lib64
-        -DCLANG_INCLUDE_PATH=/usr/lib/llvm/${major}/include/clang
+        -DCLANG_INCLUDE_PATH=$(get_llvm_prefix "${LLVM_MAX_SLOT}")/include/clang
         -DSYCLCC_CONFIG_FILE_GLOBAL_INSTALLATION=true
     )
     cmake_src_configure
