@@ -28,13 +28,6 @@ PATCHES=(
     "${FILESDIR}/${PN}-9999-fix-destination-lib.patch"
 )
 
-src_prepare() {
-    eapply_user
-
-    sed -i -e "s@\${CMAKE_INSTALL_PREFIX}@./usr@" src/compiler/llvm-to-backend/CMakeLists.txt || die
-    cmake_src_prepare
-}
-
 src_configure() {
     local mycmakeargs=(
         -DCMAKE_INSTALL_PREFIX=/usr
@@ -43,4 +36,16 @@ src_configure() {
         -DSYCLCC_CONFIG_FILE_GLOBAL_INSTALLATION=true
     )
     cmake_src_configure
+}
+
+src_install() {
+    cmake_src_install
+
+    mkdir -p "${D}/usr/lib64/hipSYCL/ext"
+    mv "${D}/${BUILD_DIR}/src/compiler/llvm-to-backend/temp_image" "${D}/usr/lib64/hipSYCL/ext/llvm-spir" || die
+    echo DUMP
+    find "${D}/lib64/hipSYCL/ext/llvm-spir"
+
+    rm -rf "${D}/var/tmp"
+    rmdir --ignore-fail-on-non-empty "${D}/var"
 }

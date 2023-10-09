@@ -122,6 +122,18 @@ index e78934aae9dc..aa9263036565 100644
  
  set(WITH_LLVM_TO_AMDGPU_AMDHSA false)
  set(WITH_LLVM_TO_PTX false)
+diff --git a/src/common/CMakeLists.txt b/src/common/CMakeLists.txt
+index 701c6cca6d7d..fb9540759d08 100644
+--- a/src/common/CMakeLists.txt
++++ b/src/common/CMakeLists.txt
+@@ -47,5 +47,5 @@ endif()
+ install(TARGETS acpp-common
+         EXPORT install_exports
+         RUNTIME DESTINATION bin
+-        LIBRARY DESTINATION lib
+-        ARCHIVE DESTINATION lib)
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 diff --git a/src/compiler/CMakeLists.txt b/src/compiler/CMakeLists.txt
 index e6a1fdf4d6d6..12c25a478977 100644
 --- a/src/compiler/CMakeLists.txt
@@ -138,7 +150,7 @@ index e6a1fdf4d6d6..12c25a478977 100644
  
  add_subdirectory(llvm-to-backend)
 diff --git a/src/compiler/llvm-to-backend/CMakeLists.txt b/src/compiler/llvm-to-backend/CMakeLists.txt
-index ac991b11cb71..d8b64e29d304 100644
+index ac991b11cb71..ac3a45ac6a44 100644
 --- a/src/compiler/llvm-to-backend/CMakeLists.txt
 +++ b/src/compiler/llvm-to-backend/CMakeLists.txt
 @@ -31,7 +31,7 @@ function(create_llvm_based_library)
@@ -159,6 +171,15 @@ index ac991b11cb71..d8b64e29d304 100644
  endfunction()
  
  function(add_hipsycl_llvm_backend)
+@@ -124,7 +124,7 @@ if(WITH_SSCP_COMPILER)
+     GIT_SHALLOW ON
+     GIT_REMOTE_UPDATE_STRATEGY CHECKOUT
+     BUILD_ALWAYS OFF
+-    INSTALL_DIR ${LLVMSPIRV_INSTALLDIR}
++    INSTALL_DIR temp_image
+     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/ext/llvm-spirv
+     CMAKE_CACHE_ARGS
+       -DLLVM_SPIRV_BUILD_EXTERNAL:BOOL=YES
 diff --git a/src/compiler/llvm-to-backend/spirv/LLVMToSpirv.cpp b/src/compiler/llvm-to-backend/spirv/LLVMToSpirv.cpp
 index 7251ad80ab13..f17578a23b7d 100644
 --- a/src/compiler/llvm-to-backend/spirv/LLVMToSpirv.cpp
@@ -195,9 +216,20 @@ index 1cfbc762511e..4bb904964e58 100644
    add_custom_target(libkernel-sscp-${target} ALL
      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 diff --git a/src/runtime/CMakeLists.txt b/src/runtime/CMakeLists.txt
-index 72e9093383a4..4f66d8bb46f9 100644
+index 72e9093383a4..7c45a6cc53c8 100644
 --- a/src/runtime/CMakeLists.txt
 +++ b/src/runtime/CMakeLists.txt
+@@ -82,8 +82,8 @@ endif()
+ install(TARGETS acpp-rt
+         EXPORT install_exports
+         RUNTIME DESTINATION bin
+-        LIBRARY DESTINATION lib
+-        ARCHIVE DESTINATION lib)
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+ 
+ 
+ if(WITH_CUDA_BACKEND)
 @@ -114,8 +114,8 @@ if(WITH_CUDA_BACKEND)
  
    install(TARGETS rt-backend-cuda
@@ -220,6 +252,17 @@ index 72e9093383a4..4f66d8bb46f9 100644
  endif()
  
  if(WITH_LEVEL_ZERO_BACKEND)
+@@ -181,8 +181,8 @@ if(WITH_LEVEL_ZERO_BACKEND)
+   endif()
+ 
+   install(TARGETS rt-backend-ze
+-        LIBRARY DESTINATION lib/hipSYCL
+-        ARCHIVE DESTINATION lib/hipSYCL)
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/hipSYCL
++        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/hipSYCL)
+ endif()
+ 
+ if(WITH_OPENCL_BACKEND)
 @@ -237,8 +237,8 @@ if(WITH_OPENCL_BACKEND)
    endif()
  
