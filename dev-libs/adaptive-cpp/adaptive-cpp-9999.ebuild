@@ -1,21 +1,22 @@
 EAPI=8
-inherit cmake llvm
+inherit cmake llvm prefix
 
-LLVM_MAX_SLOT=15
+LLVM_MAX_SLOT=17
 
 if [[ ${PV} == *9999* ]]; then
 	inherit git-r3
-	EGIT_REPO_URI="https://github.com/OpenSYCL/OpenSYCL.git"
+	EGIT_REPO_URI="https://github.com/AdaptiveCpp/AdaptiveCpp.git"
 else
-	SRC_URI="https://github.com/OpenSYCL/OpenSYCL/archive/refs/tags/v${PV}.tar.gz"
+	SRC_URI="https://github.com/AdaptiveCpp/AdaptiveCpp/archive/refs/tags/v${PV}.tar.gz"
 fi
 
-DESCRIPTION="OpenSYCL - a SYCL implementation for CPUs and GPUs"
-HOMEPAGE="https://github.com/OpenSYCL/OpenSYCL"
+DESCRIPTION="AdaptiveCpp - a SYCL implementation for CPUs and GPUs"
+HOMEPAGE="https://github.com/AdaptiveCpp/AdaptiveCpp"
 LICENSE="BSD-2"
 SLOT="0"
 CMAKE_BUILD_TYPE=Release
 KEYWORDS="~amd64"
+RESTRICT="network-sandbox"
 
 BDEPEND="
     sys-devel/clang:${LLVM_MAX_SLOT}
@@ -26,6 +27,13 @@ BDEPEND="
 PATCHES=(
     "${FILESDIR}/${PN}-9999-fix-destination-lib.patch"
 )
+
+src_prepare() {
+    eapply_user
+
+    sed -i -e "s@\${CMAKE_INSTALL_PREFIX}@./usr@" src/compiler/llvm-to-backend/CMakeLists.txt || die
+    cmake_src_prepare
+}
 
 src_configure() {
     local mycmakeargs=(
