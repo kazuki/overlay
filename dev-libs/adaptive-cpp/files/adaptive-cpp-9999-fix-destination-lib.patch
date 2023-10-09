@@ -1,17 +1,17 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 9de9ef5a54d4..9ad49f730fc6 100644
+index 136ee88800a7..18222fc70284 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -347,7 +347,7 @@ if(NOT ROCM_CXX_FLAGS)
+@@ -349,7 +349,7 @@ if(NOT ROCM_CXX_FLAGS)
    # __float128 even though it is not supported for CUDA / HIP,
    # see https://bugs.llvm.org/show_bug.cgi?id=47559.
  
--  set(ROCM_CXX_FLAGS "-isystem $HIPSYCL_PATH/include/hipSYCL/std/hiplike -isystem ${CLANG_INCLUDE_PATH} -U__FLOAT128__ -U__SIZEOF_FLOAT128__ -I$HIPSYCL_ROCM_PATH/include -I$HIPSYCL_ROCM_PATH/include --rocm-device-lib-path=$HIPSYCL_ROCM_PATH/amdgcn/bitcode --rocm-path=$HIPSYCL_ROCM_PATH -fhip-new-launch-api -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false -D__HIP_ROCclr__" CACHE STRING "Arguments passed to compiler to compile SYCL applications with ROCm")
-+  set(ROCM_CXX_FLAGS "-isystem $HIPSYCL_PATH/include/hipSYCL/std/hiplike -isystem ${CLANG_INCLUDE_PATH} -U__FLOAT128__ -U__SIZEOF_FLOAT128__ -I$HIPSYCL_ROCM_PATH/include -I$HIPSYCL_ROCM_PATH/include --rocm-device-lib-path=/usr/lib/amdgcn/bitcode --rocm-path=$HIPSYCL_ROCM_PATH -fhip-new-launch-api -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false -D__HIP_ROCclr__" CACHE STRING "Arguments passed to compiler to compile SYCL applications with ROCm")
+-  set(ROCM_CXX_FLAGS "-isystem $HIPSYCL_PATH/include/AdaptiveCpp/hipSYCL/std/hiplike -isystem ${CLANG_INCLUDE_PATH} -U__FLOAT128__ -U__SIZEOF_FLOAT128__ -I$HIPSYCL_ROCM_PATH/include -I$HIPSYCL_ROCM_PATH/include --rocm-device-lib-path=$HIPSYCL_ROCM_PATH/amdgcn/bitcode --rocm-path=$HIPSYCL_ROCM_PATH -fhip-new-launch-api -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false -D__HIP_ROCclr__" CACHE STRING "Arguments passed to compiler to compile SYCL applications with ROCm")
++  set(ROCM_CXX_FLAGS "-isystem $HIPSYCL_PATH/include/AdaptiveCpp/hipSYCL/std/hiplike -isystem ${CLANG_INCLUDE_PATH} -U__FLOAT128__ -U__SIZEOF_FLOAT128__ -I$HIPSYCL_ROCM_PATH/include -I$HIPSYCL_ROCM_PATH/include --rocm-device-lib-path=/usr/lib/amdgcn/bitcode --rocm-path=$HIPSYCL_ROCM_PATH -fhip-new-launch-api -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false -D__HIP_ROCclr__" CACHE STRING "Arguments passed to compiler to compile SYCL applications with ROCm")
  endif()
  
  if(NOT CUDA_CXX_FLAGS)	
-@@ -439,7 +439,7 @@ include(GNUInstallDirs)
+@@ -441,7 +441,7 @@ include(GNUInstallDirs)
  
  
  set(HIPSYCL_INSTALL_CMAKE_DIR
@@ -20,7 +20,7 @@ index 9de9ef5a54d4..9ad49f730fc6 100644
  
  # Set relative paths for install root in the following variables so that
  # configure_package_config_file will generate paths relative whatever is
-@@ -487,7 +487,7 @@ mark_as_advanced(
+@@ -489,7 +489,7 @@ mark_as_advanced(
  # Legacy module (Open SYCL)
  
  set(OPENSYCL_INSTALL_CMAKE_DIR
@@ -29,7 +29,7 @@ index 9de9ef5a54d4..9ad49f730fc6 100644
  
  # Set relative paths for install root in the following variables so that
  # configure_package_config_file will generate paths relative whatever is
-@@ -535,7 +535,7 @@ mark_as_advanced(
+@@ -537,7 +537,7 @@ mark_as_advanced(
  
  
  set(ADAPTIVECPP_INSTALL_CMAKE_DIR
@@ -39,7 +39,7 @@ index 9de9ef5a54d4..9ad49f730fc6 100644
  # Set relative paths for install root in the following variables so that
  # configure_package_config_file will generate paths relative whatever is
 diff --git a/bin/acpp b/bin/acpp
-index 165a7d4b6898..99e8923ff98c 100755
+index 3c431d63dba0..7b01a2b33f7d 100755
 --- a/bin/acpp
 +++ b/bin/acpp
 @@ -504,16 +504,16 @@ class acpp_config:
@@ -107,6 +107,14 @@ index 165a7d4b6898..99e8923ff98c 100755
      self._acpp_include_path = config.acpp_include_path
      self._is_explicit_multipass = config.is_explicit_multipass
      self._save_temps = config.save_temps
+@@ -1790,7 +1790,6 @@ class compiler:
+   @property
+   def common_cxx_flags(self):
+     args = [
+-      "-isystem", self._acpp_include_path,
+       "-D__OPENSYCL__","-D__HIPSYCL__", "-D__ADAPTIVECPP__", "-D__ACPP__"
+     ]
+     if self._is_stdpar:
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
 index e78934aae9dc..aa9263036565 100644
 --- a/src/CMakeLists.txt
@@ -150,7 +158,7 @@ index e6a1fdf4d6d6..12c25a478977 100644
  
  add_subdirectory(llvm-to-backend)
 diff --git a/src/compiler/llvm-to-backend/CMakeLists.txt b/src/compiler/llvm-to-backend/CMakeLists.txt
-index ac991b11cb71..ac3a45ac6a44 100644
+index ac991b11cb71..d8b64e29d304 100644
 --- a/src/compiler/llvm-to-backend/CMakeLists.txt
 +++ b/src/compiler/llvm-to-backend/CMakeLists.txt
 @@ -31,7 +31,7 @@ function(create_llvm_based_library)
@@ -171,15 +179,45 @@ index ac991b11cb71..ac3a45ac6a44 100644
  endfunction()
  
  function(add_hipsycl_llvm_backend)
-@@ -124,7 +124,7 @@ if(WITH_SSCP_COMPILER)
-     GIT_SHALLOW ON
-     GIT_REMOTE_UPDATE_STRATEGY CHECKOUT
-     BUILD_ALWAYS OFF
--    INSTALL_DIR ${LLVMSPIRV_INSTALLDIR}
-+    INSTALL_DIR temp_image
-     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/ext/llvm-spirv
-     CMAKE_CACHE_ARGS
-       -DLLVM_SPIRV_BUILD_EXTERNAL:BOOL=YES
+diff --git a/src/compiler/llvm-to-backend/amdgpu/LLVMToAmdgpu.cpp b/src/compiler/llvm-to-backend/amdgpu/LLVMToAmdgpu.cpp
+index d8f91a0ac5e6..7c527db5c5ab 100644
+--- a/src/compiler/llvm-to-backend/amdgpu/LLVMToAmdgpu.cpp
++++ b/src/compiler/llvm-to-backend/amdgpu/LLVMToAmdgpu.cpp
+@@ -110,8 +110,10 @@ bool LLVMToAmdgpuTranslator::toBackendFlavor(llvm::Module &M, PassHandler& PH) {
+   
+   M.setTargetTriple(TargetTriple);
+   M.setDataLayout(
+-      "e-p:64:64-p1:64:64-p2:32:32-p3:32:32-p4:64:64-p5:32:32-p6:32:32-i64:64-v16:16-v24:32-v32:32-"
+-      "v48:64-v96:128-v192:256-v256:256-v512:512-v1024:1024-v2048:2048-n32:64-S32-A5-G1-ni:7");
++      "e-p:64:64-p1:64:64-p2:32:32-p3:32:32-p4:64:64-p5:32:32-p6:32:32-p7:160:256:256:32-p8:128:128-i64:64-v16:16-v24:32-v32:32-"
++      "v48:64-v96:128-v192:256-v256:256-v512:512-v1024:1024-v2048:2048-n32:64-S32-A5-G1-ni:7:8");
++  //    "e-p:64:64-p1:64:64-p2:32:32-p3:32:32-p4:64:64-p5:32:32-p6:32:32-i64:64-v16:16-v24:32-v32:32-"
++  //    "v48:64-v96:128-v192:256-v256:256-v512:512-v1024:1024-v2048:2048-n32:64-S32-A5-G1-ni:7");
+ 
+   AddressSpaceMap ASMap = getAddressSpaceMap();
+ 
+@@ -134,7 +136,7 @@ bool LLVMToAmdgpuTranslator::toBackendFlavor(llvm::Module &M, PassHandler& PH) {
+ 
+   std::string BuiltinBitcodeFile = 
+     common::filesystem::join_path(common::filesystem::get_install_directory(),
+-      {"lib", "hipSYCL", "bitcode", "libkernel-sscp-amdgpu-amdhsa-full.bc"});
++      {"lib64", "hipSYCL", "bitcode", "libkernel-sscp-amdgpu-amdhsa-full.bc"});
+   
+   if(!this->linkBitcodeFile(M, BuiltinBitcodeFile))
+     return false;
+diff --git a/src/compiler/llvm-to-backend/ptx/LLVMToPtx.cpp b/src/compiler/llvm-to-backend/ptx/LLVMToPtx.cpp
+index e396e3fb6e03..56ad039f6ee3 100644
+--- a/src/compiler/llvm-to-backend/ptx/LLVMToPtx.cpp
++++ b/src/compiler/llvm-to-backend/ptx/LLVMToPtx.cpp
+@@ -147,7 +147,7 @@ bool LLVMToPtxTranslator::toBackendFlavor(llvm::Module &M, PassHandler& PH) {
+ 
+   std::string BuiltinBitcodeFile = 
+     common::filesystem::join_path(common::filesystem::get_install_directory(),
+-      {"lib", "hipSYCL", "bitcode", "libkernel-sscp-ptx-full.bc"});
++      {"lib64", "hipSYCL", "bitcode", "libkernel-sscp-ptx-full.bc"});
+   
+   std::string LibdeviceFile;
+   if(!LibdevicePath::get(LibdeviceFile)) {
 diff --git a/src/compiler/llvm-to-backend/spirv/LLVMToSpirv.cpp b/src/compiler/llvm-to-backend/spirv/LLVMToSpirv.cpp
 index 7251ad80ab13..f17578a23b7d 100644
 --- a/src/compiler/llvm-to-backend/spirv/LLVMToSpirv.cpp

@@ -17,6 +17,7 @@ SLOT="0"
 CMAKE_BUILD_TYPE=Release
 KEYWORDS="~amd64"
 RESTRICT="network-sandbox"
+IUSE="opencl"
 
 BDEPEND="
     sys-devel/clang:${LLVM_MAX_SLOT}
@@ -34,18 +35,7 @@ src_configure() {
         -DCMAKE_INSTALL_LIBDIR=lib64
         -DCLANG_INCLUDE_PATH=$(get_llvm_prefix "${LLVM_MAX_SLOT}")/include/clang
         -DSYCLCC_CONFIG_FILE_GLOBAL_INSTALLATION=true
+        -DWITH_OPENCL_BACKEND=$(usex opencl)
     )
     cmake_src_configure
-}
-
-src_install() {
-    cmake_src_install
-
-    mkdir -p "${D}/usr/lib64/hipSYCL/ext"
-    mv "${D}/${BUILD_DIR}/src/compiler/llvm-to-backend/temp_image" "${D}/usr/lib64/hipSYCL/ext/llvm-spir" || die
-    echo DUMP
-    find "${D}/lib64/hipSYCL/ext/llvm-spir"
-
-    rm -rf "${D}/var/tmp"
-    rmdir --ignore-fail-on-non-empty "${D}/var"
 }
